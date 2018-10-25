@@ -209,8 +209,6 @@ if __name__ == '__main__':
 
     geojson_output_dir = os.path.join(args.output_dir, 'output_geojson')
     geotiff_path = os.path.join(args.eval_dataset_dir, 'geotiffs')
-    truth_geojson_dir = os.path.join(args.eval_dataset_dir,
-                                     'truth_geojsons')
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
     if not os.path.exists(geojson_output_dir):
@@ -219,9 +217,7 @@ if __name__ == '__main__':
         warnings.warn('GeoJSON output path already exists. If files with the' +
                       ' same name as outputs already exist there,' +
                       ' this will cause errors.')
-    output_df = pd.DataFrame({'nadir_angle': [], 'chip_id': [], 'TruePos': [],
-                              'FalsePos': [], 'FalseNeg': [], 'Precision': [],
-                              'Recall': [], 'F1Score': []})
+    chip_summary_list = []
     for angle_idx in range(eval_arr.shape[0]):
         angle_gj_path = os.path.join(geojson_output_dir,
                                      str(eval_angle_names[angle_idx]))
@@ -241,28 +237,19 @@ if __name__ == '__main__':
                 preds_geojson = cLT.createGeoJSONFromRaster(
                     pred_geojson_path, preds_test,
                     raw_test_im.profile['transform'],
-                    raw_test_im.profile['crs'])
+                    raw_test_im.profile['crs']
+                    )
             except ValueError:
                 print('Warning: Empty prediction array for angle {}, chip {}'.format(
                         str(eval_angles[angle_idx]),
                         str(eval_chips[chip_idx])))
-                continue
-            eval_geojson = [f for f in os.listdir(truth_geojson_dir)
-                            if eval_chips[chip_idx] in f][0]
-            eval_instance = eval_base(os.path.join(truth_geojson_dir,
-                                                   eval_geojson))
-            eval_instance.load_proposal(pred_geojson_path)
-            scores = eval_instance.eval_iou(calculate_class_scores=False)[0]
-            output_df = output_df.append(
-                {'nadir_angle': str(eval_angles[angle_idx]),
-                 'chip_id': str(eval_chips[chip_idx]),
-                 'TruePos': scores['TruePos'],
-                 'FalsePos': scores['FalsePos'],
-                 'FalseNeg': scores['FalseNeg'],
-                 'Precision': scores['Precision'],
-                 'Recall': scores['Recall'],
-                 'F1Score': scores['F1Score']},
-                ignore_index=True
-                )
-            output_df.to_csv(os.path.join(args.output_dir,
-                                          'eval_scores.csv'))
+            chip_summary = {'chipName': im_fname,
+                            'geoVectorName': pred_geojson_path,
+                            'imageId': eval_angle_names[angle_idx] + '_' + eval_chips[chip_idx]}
+            chip_summary_list.append(chip_summary)
+    csv_output_path = os.path.join(args.output_dir, 'predictions.csv')
+    cLT.createCSVSummaryFile(chip_summary_list, csv_output_path,
+                             rasterChipDirectory=geotiff_path,
+                             createProposalsFile=True,
+                             competitionType='buildings',
+                             pixPrecision=2)

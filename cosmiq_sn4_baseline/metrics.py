@@ -1,5 +1,6 @@
 from keras import backend as K
 
+
 def precision(y_true, y_pred):
     """Precision for foreground pixels.
 
@@ -7,12 +8,13 @@ def precision(y_true, y_pred):
 
     """
     # count true positives
-    true_pos = K.sum(K.cast(K.all(K.stack([K.round(K.clip(y_true, 0, 1)),
-                                           K.round(K.clip(y_pred, 0, 1))],
-                                          axis=2),
-                                  axis=2), dtype='float32'))
-    pred_pos = K.sum(K.round(K.clip(y_pred, 0, 1)))
-    precision = true_pos/pred_pos
+    truth = K.round(K.clip(y_true, K.epsilon(), 1))
+    pred_pos = K.round(K.clip(y_pred, K.epsilon(), 1))
+    true_pos = K.sum(K.cast(K.all(K.stack([truth, pred_pos], axis=2), axis=2),
+                            dtype='float32'))
+    pred_pos_ct = K.sum(pred_pos) + K.epsilon()
+    precision = true_pos/pred_pos_ct
+
     return precision
 
 
@@ -23,13 +25,17 @@ def recall(y_true, y_pred):
 
     """
     # count true positives
-    true_pos = K.sum(K.cast(K.all(K.stack([K.round(K.clip(y_true, 0, 1)),
-                                           K.round(K.clip(y_pred, 0, 1))],
-                                          axis=2),
-                                  axis=2), dtype='float32'))
-    ground_truth = K.sum(K.round(K.clip(y_true, 0, 1)))
-    recall = true_pos/ground_truth
+    truth = K.round(K.clip(y_true, K.epsilon(), 1))
+    pred_pos = K.round(K.clip(y_pred, K.epsilon(), 1))
+    true_pos = K.sum(K.cast(K.all(K.stack([truth, pred_pos], axis=2), axis=2),
+                            dtype='float32'))
+    truth_ct = K.sum(K.round(K.clip(y_true, K.epsilon(), 1)))
+    if truth_ct == 0:
+        return 0
+    recall = true_pos/truth_ct
+
     return recall
+
 
 def f1_score(y_true, y_pred):
     """F1 score for foreground pixels ONLY.
@@ -39,26 +45,10 @@ def f1_score(y_true, y_pred):
     image.
 
     """
-    # from basiss: https://github.com/CosmiQ/basiss and
-    '''https://stackoverflow.com/questions/45411902/how-to-use-f1-score-with-keras-model'''
 
-    # Count positive samples.
-    c1 = K.sum(K.cast(K.all(K.stack([K.round(K.clip(y_true, 0, 1)),
-                                      K.round(K.clip(y_pred, 0, 1))], axis=0)),
-                      dtype='float32'))
-    c2 = K.sum(K.round(K.clip(y_pred, 0, 1)))
-    c3 = K.sum(K.round(K.clip(y_true, 0, 1)))
-
-    # If there are no true samples, fix the F1 score at 0.
-    if c3 == 0:
-        return 0
-    c1 = K.sum(K.round(K.clip(y_true*y_pred, 0, 1)))
-    # How many selected items are relevant?
-    precision = c1 / c2
-
-    # How many relevant items are selected?
-    recall = c1 / c3
-
+    prec = precision(y_true, y_pred)
+    rec = recall(y_true, y_pred)
     # Calculate f1_score
-    f1_score = 2 * (precision * recall) / (precision + recall)
+    f1_score = 2 * (prec * rec) / (prec + rec)
+
     return f1_score
