@@ -11,18 +11,16 @@ setup(
 
     dependency_links=['https://github.com/SpaceNetChallenge/utilities.git@spacenetV3#egg=spacenetutilites-3.0'],
 
-    install_requires=['numpy>=1.15', 'pandas>=0.23.4', 'scikit-image>=0.14.0',
-                      'rasterio>=1.0.7', 'opencv>=3.4.3',
+    install_requires=['numpy', 'pandas', 'scikit-image',
+                      'rasterio>=1.0.7', 'opencv-python',
                       'spacenetutilities==3.0', 'keras>=2.2.2',
                       'tensorflow>=1.10.0', 'tensorboard>=1.10.0',
-                      'setuptools>=40.4.0'],  # TODO: UPDATE
-    entry_points={
-        'console_scripts': [
-            'make_np_arrays = bin/make_np_arrays:main_func',
-            'train_model = bin/train_model:main_func',
-            'make_predictions = bin/make_predictions:main_func'
-        ]
-    },
+                      'setuptools'],  # TODO: UPDATE
+    scripts=[
+            'bin/make_np_arrays',
+            'bin/train_model',
+            'bin/make_predictions0'
+        ],
 
     package_data={
         "": ['*.txt', '*.md', 'Dockerfile']
