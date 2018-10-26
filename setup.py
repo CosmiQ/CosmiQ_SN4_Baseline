@@ -16,13 +16,11 @@ setup(
                       'spacenetutilities==3.0', 'keras>=2.2.2',
                       'tensorflow>=1.10.0', 'tensorboard>=1.10.0',
                       'setuptools'],  # TODO: UPDATE
-    entry_points={
-        'console_scripts': [
-            'make_np_arrays=bin/make_np_arrays:main_func',
-            'train_model=bin/train_model:main_func',
-            'make_predictions=bin/make_predictions:main_func'
-        ]
-    },
+    scripts=[
+            'bin/make_np_arrays',
+            'bin/train_model',
+            'bin/make_predictions0'
+        ],
 
     package_data={
         "": ['*.txt', '*.md', 'Dockerfile']
