@@ -1,0 +1,15 @@
+Dockerfile
+MANIFEST.in
+CosmiQ_SN4_Baseline.egg-info/PKG-INFO
+CosmiQ_SN4_Baseline.egg-info/SOURCES.txt
+CosmiQ_SN4_Baseline.egg-info/dependency_links.txt
+CosmiQ_SN4_Baseline.egg-info/requires.txt
+CosmiQ_SN4_Baseline.egg-info/top_level.txt
+cosmiq_sn4_baseline/DataGenerator.py
+cosmiq_sn4_baseline/__init__.py
+cosmiq_sn4_baseline/callbacks.py
+cosmiq_sn4_baseline/inference.py
+cosmiq_sn4_baseline/losses.py
+cosmiq_sn4_baseline/metrics.py
+cosmiq_sn4_baseline/models.py
+cosmiq_sn4_baseline/utils.py

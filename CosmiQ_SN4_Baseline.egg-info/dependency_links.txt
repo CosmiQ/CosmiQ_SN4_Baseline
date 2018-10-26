@@ -1,0 +1,1 @@
+https://github.com/SpaceNetChallenge/utilities/tarball/spacenetV3#egg=spacenetutilities-3.0
