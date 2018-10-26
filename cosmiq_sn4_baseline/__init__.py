@@ -8,6 +8,7 @@ from .utils import *
 COLLECTS = ['Atlanta_nadir7_catid_1030010003D22F00',
             'Atlanta_nadir8_catid_10300100023BC100',
             'Atlanta_nadir10_catid_1030010003CAF100',
+            'Atlanta_nadir10_catid_1030010003993E00',
             'Atlanta_nadir13_catid_1030010002B7D800',
             'Atlanta_nadir14_catid_10300100039AB000',
             'Atlanta_nadir16_catid_1030010002649200',
@@ -33,3 +34,6 @@ COLLECTS = ['Atlanta_nadir7_catid_1030010003D22F00',
             'Atlanta_nadir53_catid_1030010003193D00']
 
 BGR_8BIT_THRESHOLD = 3000
+
+COLLECT_ANGLES = [7, 8, 10, 10, 13, 14, 16, 19, 21, 23, 25, 27, 29, 30, 32, 34,
+                  36, 39, 42, 44, 46, 47, 49, 50, 52, 53, 53]

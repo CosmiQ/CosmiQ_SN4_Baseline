@@ -86,21 +86,21 @@ if __name__ == '__main__':
         print('         Making 8-bit RGB images for training. ')
         print('------------------------------------------------------------')
     space_base.utils.make_rgbs(train_src_dir, train_rgb_dir,
-                              verbose=args.verbose)
+                               verbose=args.verbose)
     if args.verbose:
         print('------------------------------------------------------------')
         print('         Making 8-bit RGB images for testing. ')
         print('------------------------------------------------------------')
-    space_base.utils.make_rgbs(test_src_dir, test_rgb_dir, verbose=args.verbose,
-                              has_subdirs=False)
+    space_base.utils.make_rgbs(test_src_dir, test_rgb_dir,
+                               verbose=args.verbose)
     if args.verbose:
         print('------------------------------------------------------------')
         print('             Making masks from geojsons. ')
         print('------------------------------------------------------------')
     space_base.utils.masks_from_geojsons(geojson_src_dir,
-                                        os.path.join(train_src_dir,
-                                                     space_base.COLLECTS),
-                                        train_mask_dir)
+                                         os.path.join(train_src_dir,
+                                                      space_base.COLLECTS),
+                                         train_mask_dir)
     if args.verbose:
         print('------------------------------------------------------------')
         print('Creating train and val numpy arrays. This will take a while.')
@@ -117,3 +117,16 @@ if __name__ == '__main__':
         test_rgb_dir, os.path.join(args.output_dir, 'test_data'),
         verbose=args.verbose
         )
+    if args.verbose:
+        print('------------------------------------------------------------')
+        print('  Transferring geotiffs to test dir for making predictions. ')
+        print('------------------------------------------------------------')
+    geotiff_dest_path = os.path.join(args.output_dir, 'test_data', 'geotiffs')
+    if not os.path.exists(geotiff_dest_path):
+        os.mkdir(geotiff_dest_path)
+    for collect in space_base.COLLECTS:
+        src_subdir = os.path.join(args.test_src_dir, collect, 'Pan-Sharpen')
+        im_list = [f for f in os.listdir(src_subdir) if f.endswith('.tif')]
+        for im_file in im_list:
+            os.rename(os.path.join(src_subdir, im_file),
+                      os.path.join(geotiff_dest_path, im_file))

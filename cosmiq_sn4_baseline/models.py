@@ -146,9 +146,10 @@ def ternausnetv1(input_shape=(512, 512, 3), base_depth=64):
     up11 = Conv2DTranspose(int(base_depth/2), 2, strides=(2, 2),
                            activation='relu', padding='same')(conv10_1)
     concat11 = concatenate([up11, conv1])
-    conv11_1 = Conv2D(1, 1, activation='sigmoid', padding='same')(concat11)
 
-    return Model(input=inputs, output=conv11_1)
+    out = Conv2D(1, 1, activation='sigmoid', padding='same')(concat11)
+
+    return Model(input=inputs, output=out)
 
 
 def vanilla_unet(input_shape=(512, 512, 3), base_depth=32, drop_rate=0,

@@ -86,7 +86,7 @@ def pan_to_bgr(src_path, dest_path):
     cv2.imwrite(dest_path, bgr_im)
 
 
-def make_rgbs(src_dir, dest_dir, verbose=False, has_subdirs=True):
+def make_rgbs(src_dir, dest_dir, verbose=False):
     """Create RGB images from Pan-Sharpened 16-bit source images.
 
     Arguments:
@@ -106,31 +106,20 @@ def make_rgbs(src_dir, dest_dir, verbose=False, has_subdirs=True):
     """
     if not os.path.isdir(dest_dir):
         os.mkdir(dest_dir)
-    if has_subdirs:
-        for collect in space_base.COLLECTS:
-            if verbose:
-                print('Converting collect {} to BGR 8-bit'.format(collect))
-            collect_path = os.path.join(src_dir, collect)
-            collect_pansharp_path = os.path.join(collect_path, 'Pan-Sharpen')
-            im_list = [f for f in os.listdir(collect_pansharp_path)
-                       if f.endswith('.tif')]
-            n_ims = len(im_list)
-            for i in range(n_ims):
-                im_fname = im_list[i]
-                pan_to_bgr(os.path.join(collect_pansharp_path, im_fname),
-                           os.path.join(dest_dir, im_fname))
-                if verbose:
-                    print('    image {} of {} done'.format(i, n_ims))
-    else:
-        im_list = [f for f in os.listdir(src_dir) if f.endswith('.tif')]
+    for collect in space_base.COLLECTS:
+        if verbose:
+            print('Converting collect {} to BGR 8-bit'.format(collect))
+        collect_path = os.path.join(src_dir, collect)
+        collect_pansharp_path = os.path.join(collect_path, 'Pan-Sharpen')
+        im_list = [f for f in os.listdir(collect_pansharp_path)
+                   if f.endswith('.tif')]
         n_ims = len(im_list)
         for i in range(n_ims):
             im_fname = im_list[i]
             pan_to_bgr(os.path.join(collect_pansharp_path, im_fname),
                        os.path.join(dest_dir, im_fname))
             if verbose:
-                print('image {} of {} done'.format(i, n_ims))
-
+                print('    image {} of {} done'.format(i, n_ims))
 
 def rgbs_and_masks_to_arrs(rgb_src_dir, dest_path, mask_src_dir=None,
                            train_val_split=1, mk_angle_splits=True,
@@ -212,11 +201,13 @@ def rgbs_and_masks_to_arrs(rgb_src_dir, dest_path, mask_src_dir=None,
     if verbose:
         print('Saving chip indices corresponding to train and validation sets.')
         print("YOU'LL NEED THESE FILES IF YOU WANT TO REBUILD THE SAME SPLIT!")
-    np.save(os.path.join(dest_path, 'training_chip_ids.npy'),
-            unique_chips[train_inds])
     if train_val_split != 1:
+        np.save(os.path.join(dest_path, 'training_chip_ids.npy'),
+                unique_chips[train_inds])
         np.save(os.path.join(dest_path, 'validation_chip_ids.npy'),
                 unique_chips[val_inds])
+    else:
+        np.save(os.path.join(dest_path, 'test_chip_ids.npy'))
     if verbose and train_val_split != 1:
         print('Splitting train data into training and validation...')
     if train_val_split != 1:
@@ -226,7 +217,10 @@ def rgbs_and_masks_to_arrs(rgb_src_dir, dest_path, mask_src_dir=None,
         train_im_arr = im_arr
         if mask_src_dir is not None:
             train_mask_arr = mask_arr
-    train_output_dir = os.path.join(dest_path, 'train')
+    if train_val_split != 1:
+        train_output_dir = os.path.join(dest_path, 'train')
+    else:
+        train_output_dir = os.path.join(dest_path, 'test')
     if verbose:
         print('Saving training arrays...')
     if not os.path.exists(train_output_dir):
@@ -234,9 +228,14 @@ def rgbs_and_masks_to_arrs(rgb_src_dir, dest_path, mask_src_dir=None,
         if verbose:
             print('Saving training image array...')
         # flatten the collect axis during saving for ease of use in model
-        np.save(os.path.join(train_output_dir, 'all_train_ims.npy'),
-                np.concatenate([train_im_arr[i, :, :, :, :] for i in
-                                range(n_collects)]))
+        if train_val_split != 1:
+            np.save(os.path.join(train_output_dir, 'all_train_ims.npy'),
+                    np.concatenate([train_im_arr[i, :, :, :, :] for i in
+                                    range(n_collects)]))
+        else:
+            np.save(os.path.join(train_output_dir, 'all_test_ims.npy'),
+                    np.concatenate([train_im_arr[i, :, :, :, :] for i in
+                                    range(n_collects)]))
         if verbose and mask_src_dir is not None:
             print('Saving training mask array...')
         # replicate the mask array to match collects in the image array
