@@ -4,12 +4,9 @@ import os
 import rasterio
 import numpy as np
 from spacenetutilities.labeltools import coreLabelTools as cLT
-from functools import partial, update_wrapper
 from keras import backend as K
 from skimage.measure import label
-from cw_eval.baseeval import eval_base
 import warnings
-import pandas as pd
 
 
 def infer(image_array, model, model_input_shape, step_size, rm_cutoff=0):

@@ -41,7 +41,7 @@ class TerminateOnMetricNaN(Callback):
             logs = logs or {}
             metric_score = logs.get(self.metric)
             print('metric score: {}'.format(metric_score))
-                if np.isnan(metric_score) or np.isinf(metric_score):
-                    print('Batch {}: Invalid score for metric'.format(batch) +
-                          '{}, terminating training'.format(self.metric))
-                    self.model.stop_training = True
+            if np.isnan(metric_score) or np.isinf(metric_score):
+                print('Batch {}: Invalid score for metric'.format(batch) +
+                      '{}, terminating training'.format(self.metric))
+                self.model.stop_training = True
