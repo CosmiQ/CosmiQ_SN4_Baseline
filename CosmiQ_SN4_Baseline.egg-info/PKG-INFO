@@ -1,0 +1,11 @@
+Metadata-Version: 1.2
+Name: CosmiQ-SN4-Baseline
+Version: 0.1.1
+Summary: SpaceNet 4 Baseline
+Home-page: UNKNOWN
+Author: Nick Weir
+Author-email: nweir@iqt.org
+License: APACHE 2
+Description: UNKNOWN
+Platform: UNKNOWN
+Requires-Python: >=3.6.5
