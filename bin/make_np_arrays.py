@@ -6,7 +6,6 @@
 #    instructions)
 # 3. Expand the .gzipped directories of images
 
-
 import cv2
 import os
 import sys
@@ -39,7 +38,7 @@ def _check_data(dataset_dir):
             raise NotADirectoryError('The imagery tarballs must be unzipped to proceed.')
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--dataset_dir', '-d', type=str, required=True,
@@ -130,3 +129,7 @@ if __name__ == '__main__':
         for im_file in im_list:
             os.rename(os.path.join(src_subdir, im_file),
                       os.path.join(geotiff_dest_path, im_file))
+
+
+if __name__ == '__main__':
+    main()
