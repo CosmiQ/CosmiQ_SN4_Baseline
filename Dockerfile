@@ -59,22 +59,22 @@ SHELL ["/bin/bash", "-c"]
 
 
 # set up conda environment and add to $PATH
-RUN conda create -n tf_keras python=3.6 \
-                    && echo "source activate tf_keras" > ~/.bashrc
-ENV PATH /opt/conda/envs/tf_keras/bin:$PATH
+RUN conda create -n space_base python=3.6 \
+                    && echo "source activate space_base" > ~/.bashrc
+ENV PATH /opt/conda/envs/space_base/bin:$PATH
 
 # install GPU version of tensorflow
 ENV PATH /opt/conda/bin:$PATH
-RUN source activate tf_keras && \
-    conda install -n tf_keras -c defaults tensorflow-gpu
+RUN source activate space_base && \
+    conda install -n space_base -c defaults tensorflow-gpu
 
 # install keras with tf backend
 ENV KERAS_BACKEND=tensorflow
-RUN source activate tf_keras \
-  && conda install -n tf_keras keras
+RUN source activate space_base \
+  && conda install -n space_base keras
 
-# install various conda dependencies into the tf_keras environment
-RUN conda install -n tf_keras \
+# install various conda dependencies into the space_base environment
+RUN conda install -n space_base \
               awscli \
               osmnx=0.7.3 \
               affine \
@@ -107,7 +107,7 @@ RUN conda install -n tf_keras \
               rasterio
 
 # add a jupyter kernel for the conda environment in case it's wanted
-RUN source activate tf_keras && python -m ipykernel.kernelspec
+RUN source activate space_base && python -m ipykernel.kernelspec
 
 # open ports for jupyterlab and tensorboard
 EXPOSE 8888 6006
@@ -117,9 +117,10 @@ WORKDIR /tmp/
 
 RUN git clone https://github.com/SpaceNetChallenge/utilities.git && cd utilities && \
     git checkout spacenetV3 && \
-    source activate tf_keras && \
+    source activate space_base && \
     pip install --no-cache-dir --no-dependencies -e .
 
-WORKDIR /local_data/NW_Off_NadirBaseline
+RUN source activate space_base && \
+	  pip install -e git+git://github.com/cosmiq/cosmiq_sn4_baseline.git
 
 RUN ["/bin/bash"]
