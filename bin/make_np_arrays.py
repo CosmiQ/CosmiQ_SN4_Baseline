@@ -19,17 +19,17 @@ import cosmiq_sn4_baseline as space_base
 
 def _check_data(dataset_dir):
     """Check to make sure dataset is structured correctly."""
-    train_src_dir = os.path.join(args.dataset_dir,
+    train_src_dir = os.path.join(dataset_dir,
                                  'SpaceNet-Off-Nadir_Train')
-    test_src_dir = os.path.join(args.dataset_dir,
+    test_src_dir = os.path.join(dataset_dir,
                                 'SpaceNet-Off-Nadir_Test_Public')
-    geojson_dir = os.path.join(args.dataset_dir, 'geojson')
+    geojson_dir = os.path.join(dataset_dir, 'geojson')
 
     if not os.path.isdir(train_src_dir):
         raise NotADirectoryError('The source directory {} does not exist. See script for instructions.'.format(train_src_dir))
     if not os.path.isdir(test_src_dir):
         raise NotADirectoryError('The source directory {} does not exist. See script for instructions.'.format(test_src_dir))
-    geojson_dir = os.path.join(args.dataset_dir, 'geojson')
+    geojson_dir = os.path.join(dataset_dir, 'geojson')
     if not os.path.isdir(geojson_dir):
         raise NotADirectoryError('The GeoJSON tarball needs to be unzipped to proceed.')
     for collect in space_base.COLLECTS:

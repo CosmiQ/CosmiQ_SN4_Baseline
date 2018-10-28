@@ -4,21 +4,21 @@ import warnings
 import numpy as np
 
 parser = argparse.ArgumentParser(description='Train the baseline model.')
-parser.add_argument('--seed', '-s', type=int, default=1337,
-                    help='Randomization seed for initialization and datagen.')
-parser.add_argument('--dataset', '-d', type=str, default='all',
-                    help='Data to train the model on. Options are ' +
-                    '`all`, `nadir`, `offnadir`, or `faroffnadir`.')
-parser.add_argument('--model', '-m', type=str, default='ternausnetv1',
-                    help='Model architecture. Either `ternausnetv1` or `unet`.' +
-                    ' See cosmiq_sn4_baseline.model for architecture details.')
-parser.add_argument('--output_path', '-o', type=str, default='model.hdf5',
-                    help='Path for saving trained model. ' +
-                    'Defaults to model.hdf5 in the working directory.')
-parser.add_argument('--data_path', '-dp', type=str, default='',
+parser.add_argument('--data_path', '-d', type=str, default='',
                     help='Path to the directory containing the `train` and ' +
                     '`val` data folders. Defaults to the current working ' +
                     'directory.')
+parser.add_argument('--output_path', '-o', type=str, default='model.hdf5',
+                    help='Path for saving trained model. ' +
+                    'Defaults to model.hdf5 in the working directory.')
+parser.add_argument('--subset', '-s', type=str, default='all',
+                    help='Data to train the model on. Options are ' +
+                    '`all`, `nadir`, `offnadir`, or `faroffnadir`.')
+parser.add_argument('--seed', '-e', type=int, default=1337,
+                    help='Randomization seed for initialization and datagen.')
+parser.add_argument('--model', '-m', type=str, default='ternausnetv1',
+                    help='Model architecture. Either `ternausnetv1` or `unet`.' +
+                    ' See cosmiq_sn4_baseline.model for architecture details.')
 parser.add_argument('--tensorboard_dir', '-t', type=str, default='',
                     help='Path to save logs for TensorBoard. ' +
                     'If not provided, no TensorBoard logs are saved.')
@@ -134,5 +134,5 @@ def main(dataset, model='ternausnetv1', data_path='',
 
 
 if __name__ == '__main__':
-    main(args.dataset, model=args.model, data_path=args.data_path,
+    main(args.subset, model=args.model, data_path=args.data_path,
          output_path=args.output_path, tb_dir=args.tb_dir)
