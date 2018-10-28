@@ -7,10 +7,10 @@ _This library is still in its final debugging stages. Check back soon for the ma
 This repository contains code to train baseline models to identify buildings in the SpaceNet 4: Off-Nadir Building Footprint Detection Challenge, and then use those models to generate predictions for test imagery in the competition format. See [the DownLinQ post about the baseline](https://medium.com/the-downlinq) for more information.
 
 ### Table of Contents:
-- #### [Requirements](#requirements)
-- #### [Repository contents](#repository-contents)
-- #### [Installation](#installation)
-- #### [Usage](#usage)
+- [Requirements](#requirements)
+- [Repository contents](#repository-contents)
+- [Installation](#installation)
+- [Usage](#usage)
 ---
 ## Requirements
 - Python 3.6
