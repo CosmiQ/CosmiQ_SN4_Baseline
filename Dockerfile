@@ -37,6 +37,9 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+SHELL ["/bin/bash", "-c"]
+ENV PATH /opt/conda/bin:$PATH
+
 # install anaconda
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh -O ~/miniconda.sh && \
     /bin/bash ~/miniconda.sh -b -p /opt/conda && \
@@ -55,7 +58,6 @@ RUN conda update conda && \
     conda config --remove channels defaults && \
     conda config --add channels conda-forge
 
-SHELL ["/bin/bash", "-c"]
 
 
 # set up conda environment and add to $PATH
@@ -64,7 +66,6 @@ RUN conda create -n space_base python=3.6 \
 ENV PATH /opt/conda/envs/space_base/bin:$PATH
 
 # install GPU version of tensorflow
-ENV PATH /opt/conda/bin:$PATH
 RUN source activate space_base && \
     conda install -n space_base -c defaults tensorflow-gpu
 
@@ -121,6 +122,6 @@ RUN git clone https://github.com/SpaceNetChallenge/utilities.git && cd utilities
     pip install --no-cache-dir --no-dependencies -e .
 
 RUN source activate space_base && \
-	  pip install -e git+git://github.com/cosmiq/cosmiq_sn4_baseline.git
+	  pip install -e git+git://github.com/cosmiq/cosmiq_sn4_baseline.git#egg=cosmiq_sn4_baseline
 
 RUN ["/bin/bash"]
