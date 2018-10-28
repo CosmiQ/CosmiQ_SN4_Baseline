@@ -6,6 +6,11 @@ _This library is still in its final debugging stages. Check back soon for the ma
 
 This repository contains code to train baseline models to identify buildings in the SpaceNet 4: Off-Nadir Building Footprint Detection Challenge, and then use those models to generate predictions for test imagery in the competition format. See [the DownLinQ post about the baseline](https://medium.com/the-downlinq) for more information.
 
+### Table of Contents:
+- #### [Requirements](#requirements)
+- #### [Repository contents](#repository-contents)
+- #### [Installation](#installation)
+- #### [Usage](#usage)
 ---
 ## Requirements
 - Python 3.6
@@ -49,7 +54,7 @@ If you do not have access to GPUs, or you only wish to install the python librar
   - Navigate to your desired destination directory in a shell, and run: `git clone https://github.com/cosmiq/cosmiq_sn4_baseline.git`
   - `cd CosmiQ_SN4_Baseline`
   - `pip install -e .`
-2. 1. Install directly from GitHub _(python module only)_
+2. Install directly from GitHub _(python module only)_
   - Within a shell, run `pip install -e git+git://github.com/cosmiq_sn4_baseline`
 ---
 ## Usage
