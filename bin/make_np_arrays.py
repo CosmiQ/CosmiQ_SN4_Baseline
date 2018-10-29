@@ -6,13 +6,8 @@
 #    instructions)
 # 3. Expand the .gzipped directories of images
 
-import cv2
 import os
-import sys
-from skimage import io
-import numpy as np
-import pandas as pd
-import rasterio
+import shutil
 import argparse
 import cosmiq_sn4_baseline as space_base
 
@@ -56,7 +51,15 @@ def main():
         '--create_splits', '-s', action='store_const', const=True,
         default=False, help='Create nadir, off-nadir, and far-off-nadir subarrays. Takes up more hard disk space.'
     )
+    parser.add_argument(
+        '--overwrite', '-ow', action='store_const', const=True,
+        default=False, help='Overwrite existing files if present.'
+    )
     args = parser.parse_args()
+    if args.overwrite:
+        skip_existing = False
+    else:
+        skip_existing = True
     if args.verbose:
         print('------------------------------------------------------------')
         print('                 Checking directories... ')
@@ -67,9 +70,9 @@ def main():
     test_rgb_dir = os.path.join(args.output_dir, 'test_rgb')
     train_mask_dir = os.path.join(args.output_dir, 'masks')
     train_src_dir = os.path.join(args.dataset_dir, 'SpaceNet-Off-Nadir_Train')
-    test_src_dir = os.path.join(args.dataset_dir,
+    test_src_dir = os.path.join(args.dataset_dir, 'SpaceNet-Off-Nadir_Test',
                                 'SpaceNet-Off-Nadir_Test_Public')
-    geojson_src_dir = os.path.join(train_src_dir, 'geojson')
+    geojson_src_dir = os.path.join(train_src_dir, 'geojson', 'spacenet-buildings')
 
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
@@ -85,36 +88,40 @@ def main():
         print('         Making 8-bit RGB images for training. ')
         print('------------------------------------------------------------')
     space_base.utils.make_rgbs(train_src_dir, train_rgb_dir,
-                               verbose=args.verbose)
+                               verbose=args.verbose,
+                               skip_existing=skip_existing)
     if args.verbose:
         print('------------------------------------------------------------')
         print('         Making 8-bit RGB images for testing. ')
         print('------------------------------------------------------------')
     space_base.utils.make_rgbs(test_src_dir, test_rgb_dir,
-                               verbose=args.verbose)
+                               verbose=args.verbose,
+                               skip_existing=skip_existing)
     if args.verbose:
         print('------------------------------------------------------------')
         print('             Making masks from geojsons. ')
         print('------------------------------------------------------------')
     space_base.utils.masks_from_geojsons(geojson_src_dir,
                                          os.path.join(train_src_dir,
-                                                      space_base.COLLECTS),
-                                         train_mask_dir)
+                                                      space_base.COLLECTS[0],
+                                                      'Pan-Sharpen'),
+                                         train_mask_dir, skip_existing=True,
+                                         verbose=args.verbose)
     if args.verbose:
         print('------------------------------------------------------------')
         print('Creating train and val numpy arrays. This will take a while.')
         print('------------------------------------------------------------')
     space_base.utils.rgbs_and_masks_to_arrs(
         train_rgb_dir, args.output_dir, train_mask_dir,
-        train_val_split=0.8, mk_angle_splits=args.create_splits,
-        verbose=args.verbose)
+        mk_angle_splits=args.create_splits, dataset_type='train',
+        verbose=args.verbose, skip_existing=skip_existing)
     if args.verbose:
         print('------------------------------------------------------------')
         print('     Creating test numpy arrays. This will be faster. ')
         print('------------------------------------------------------------')
     space_base.utils.rgbs_and_masks_to_arrs(
         test_rgb_dir, os.path.join(args.output_dir, 'test_data'),
-        verbose=args.verbose
+        verbose=args.verbose, skip_existing=skip_existing, dataset_type='test'
         )
     if args.verbose:
         print('------------------------------------------------------------')
@@ -124,10 +131,10 @@ def main():
     if not os.path.exists(geotiff_dest_path):
         os.mkdir(geotiff_dest_path)
     for collect in space_base.COLLECTS:
-        src_subdir = os.path.join(args.test_src_dir, collect, 'Pan-Sharpen')
+        src_subdir = os.path.join(test_src_dir, collect, 'Pan-Sharpen')
         im_list = [f for f in os.listdir(src_subdir) if f.endswith('.tif')]
         for im_file in im_list:
-            os.rename(os.path.join(src_subdir, im_file),
+            shutil.copyfile(os.path.join(src_subdir, im_file),
                       os.path.join(geotiff_dest_path, im_file))
 
 

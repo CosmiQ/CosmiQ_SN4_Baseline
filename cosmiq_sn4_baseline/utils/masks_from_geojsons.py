@@ -1,7 +1,8 @@
 import os
 from spacenetutilities.labeltools import coreLabelTools as cLT
 
-def masks_from_geojsons(geojson_dir, im_src_dir, mask_dest_dir):
+def masks_from_geojsons(geojson_dir, im_src_dir, mask_dest_dir,
+                        skip_existing=False, verbose=False):
     """Create mask images from geojsons.
 
     Arguments:
@@ -26,9 +27,14 @@ def masks_from_geojsons(geojson_dir, im_src_dir, mask_dest_dir):
     geojsons = [f for f in os.listdir(geojson_dir) if f.endswith('json')]
     ims = [f for f in os.listdir(im_src_dir) if f.endswith('.tif')]
     for geojson in geojsons:
-        chip_id = '_'.join(geojson.split('_')[1:-1])
-        matching_im = [i for i in ims if chip_id in i][0]
+        chip_id = os.path.splitext('_'.join(geojson.split('_')[1:]))[0]
         dest_path = os.path.join(mask_dest_dir, 'mask_' + chip_id + '.tif')
-        cLT.createRasterFromGeoJson(os.path.join(geojson_dir, geojson),
-                                    os.path.join(im_src_dir, matching_im),
-                                    dest_path)
+        if os.path.exists(dest_path) and skip_existing:
+            if verbose:
+                print('{} already exists, skipping...'.format(dest_path))
+            continue
+        matching_im = [i for i in ims if chip_id in i][0]
+        # assign output below so it's silent
+        g = cLT.createRasterFromGeoJson(os.path.join(geojson_dir, geojson),
+                                        os.path.join(im_src_dir, matching_im),
+                                        dest_path)

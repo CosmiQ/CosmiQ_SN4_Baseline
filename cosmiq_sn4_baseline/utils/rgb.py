@@ -88,4 +88,4 @@ def make_rgbs(src_dir, dest_dir, verbose=False, skip_existing=True):
             pan_to_bgr(os.path.join(collect_pansharp_path, im_fname),
                        os.path.join(dest_path))
             if verbose:
-                print('    image {} of {} done'.format(i, n_ims))
+                print('    image {} of {} done'.format(i+1, n_ims))
