@@ -67,9 +67,9 @@ def main():
     test_rgb_dir = os.path.join(args.output_dir, 'test_rgb')
     train_mask_dir = os.path.join(args.output_dir, 'masks')
     train_src_dir = os.path.join(args.dataset_dir, 'SpaceNet-Off-Nadir_Train')
-    test_src_dir = os.path.join(args.dataset_dir,
+    test_src_dir = os.path.join(args.dataset_dir, 'SpaceNet-Off-Nadir_Test',
                                 'SpaceNet-Off-Nadir_Test_Public')
-    geojson_src_dir = os.path.join(train_src_dir, 'geojson')
+    geojson_src_dir = os.path.join(train_src_dir, 'geojson', 'spacenet-buildings')
 
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
@@ -98,8 +98,10 @@ def main():
         print('------------------------------------------------------------')
     space_base.utils.masks_from_geojsons(geojson_src_dir,
                                          os.path.join(train_src_dir,
-                                                      space_base.COLLECTS),
-                                         train_mask_dir)
+                                                      space_base.COLLECTS[0],
+                                                      'Pan-Sharpen'),
+                                         train_mask_dir, skip_existing=True,
+                                         verbose=args.verbose)
     if args.verbose:
         print('------------------------------------------------------------')
         print('Creating train and val numpy arrays. This will take a while.')
