@@ -137,13 +137,14 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
         print('Saving training arrays...')
     if not os.path.exists(train_output_dir):
         os.mkdir(train_output_dir)
-        if verbose:
-            print('Saving training image array...')
-        # flatten the collect axis during saving for ease of use in model
-        np.save(os.path.join(train_output_dir,
-                             'all_train_ims.npy'),
-                np.concatenate([train_im_arr[i, :, :, :, :] for i in
-                                range(n_collects)]))
+    if verbose:
+        print('Saving training image array...')
+    # flatten the collect axis during saving for ease of use in model
+    np.save(os.path.join(train_output_dir,
+                         'all_train_ims.npy'),
+            np.concatenate([train_im_arr[i, :, :, :, :] for i in
+                            range(n_collects)]))
+    gc.collect()
     if mk_angle_splits:
         if verbose:
             print('  Saving sub-arrays for each subset of angles...')
