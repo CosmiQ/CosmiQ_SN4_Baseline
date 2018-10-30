@@ -11,6 +11,7 @@ import os
 import sys
 from skimage import io
 import numpy as np
+import shutil
 import pandas as pd
 import rasterio
 import argparse
@@ -118,7 +119,7 @@ def main():
         print('------------------------------------------------------------')
     space_base.utils.rgbs_and_masks_to_arrs(
         train_rgb_dir, args.output_dir, train_mask_dir,
-        mk_angle_splits=args.create_splits,
+        mk_angle_splits=args.create_splits, dataset_type='train',
         verbose=args.verbose, skip_existing=skip_existing)
     if args.verbose:
         print('------------------------------------------------------------')
@@ -126,7 +127,7 @@ def main():
         print('------------------------------------------------------------')
     space_base.utils.rgbs_and_masks_to_arrs(
         test_rgb_dir, os.path.join(args.output_dir, 'test_data'),
-        verbose=args.verbose, skip_existing=skip_existing
+        verbose=args.verbose, skip_existing=skip_existing, dataset_type='test'
         )
     if args.verbose:
         print('------------------------------------------------------------')
@@ -136,10 +137,10 @@ def main():
     if not os.path.exists(geotiff_dest_path):
         os.mkdir(geotiff_dest_path)
     for collect in space_base.COLLECTS:
-        src_subdir = os.path.join(args.test_src_dir, collect, 'Pan-Sharpen')
+        src_subdir = os.path.join(test_src_dir, collect, 'Pan-Sharpen')
         im_list = [f for f in os.listdir(src_subdir) if f.endswith('.tif')]
         for im_file in im_list:
-            os.rename(os.path.join(src_subdir, im_file),
+            shutil.copyfile(os.path.join(src_subdir, im_file),
                       os.path.join(geotiff_dest_path, im_file))
 
 
