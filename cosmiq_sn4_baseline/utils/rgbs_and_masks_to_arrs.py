@@ -36,8 +36,9 @@ def rgbs_and_masks_to_arrs(rgb_src_dir, dest_path, mask_src_dir=None,
 
     if not os.path.isdir(rgb_src_dir):
         raise NotADirectoryError('{} is not a directory'.format(rgb_src_dir))
-    if dataset_type == 'train' and not os.path.isdir(mask_src_dir):
-        raise NotADirectoryError('{} is not a directory'.format(mask_src_dir))
+    if dataset_type == 'train':
+        if not os.path.isdir(mask_src_dir):
+            raise NotADirectoryError('{} is not a directory'.format(mask_src_dir))
     if not os.path.exists(dest_path):
         os.makedirs(dest_path)
     if dataset_type not in ['train', 'test']:
@@ -75,8 +76,9 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
         if verbose:
             print('Mask array exists and overwrite is off. ' +
                   'Loading existing array.')
-        mask_arr = np.load(os.path.join(train_output_dir, 'all_train_masks.npy',
-                                        mmap_mode='r'))
+        mask_arr = np.load(os.path.join(train_output_dir,
+                                        'all_train_masks.npy'),
+                           mmap_mode='r')
     else:
         if verbose:
             print('Making mask array...')
@@ -206,7 +208,7 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
             if verbose:
                 print('    Saving far-off-nadir training arrays...')
             np.save(os.path.join(train_output_dir, 'faroffnadir_train_ims.npy'),
-                    train_im_arr[18*len(unique_chips):, :, :, :, :])
+                    train_im_arr[18*len(unique_chips):, :, :, :, ])
         else:
             if verbose:
                 print('Saved numpy array {} exists, skipping...'.format(faroffnadir_arr_path))
