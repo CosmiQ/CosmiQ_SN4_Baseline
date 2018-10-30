@@ -134,17 +134,51 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
     train_im_arr = im_arr[:, train_inds, :, :, :]
     train_mask_arr = mask_arr[train_inds, :, :, :]
     if verbose:
-        print('Saving training arrays...')
+        print('Saving training mask array...')
+    np.save(os.path.join(train_output_dir, 'all_train_masks.npy'),
+            np.concatenate([train_mask_arr
+                            for i in range(len(space_base.COLLECTS))]))
+    nadir_mask_path = os.path.join(train_output_dir,
+                                   'nadir_train_masks.npy')
+    offnadir_mask_path = os.path.join(train_output_dir,
+                                      'offnadir_train_masks.npy')
+    faroffnadir_mask_path = os.path.join(train_output_dir,
+                                         'faroffnadir_train_masks.npy')
+    if verbose:
+        print('    Saving masks for subsets...')
+    if not skip_existing or not os.path.exists(nadir_mask_path):
+        np.save(os.path.join(train_output_dir, 'nadir_train_masks.npy'),
+                np.concatenate([train_mask_arr for i in range(11)]))
+    else:
+        if verbose:
+            print('     {} exists, skipping...'.format(nadir_mask_path))
+    if not skip_existing or not os.path.exists(offnadir_mask_path):
+        np.save(os.path.join(train_output_dir, 'offnadir_train_masks.npy'),
+                np.concatenate([train_mask_arr for i in range(11, 18)]))
+    else:
+        if verbose:
+            print('     {} exists, skipping...'.format(offnadir_mask_path))
+    if not skip_existing or not os.path.exists(faroffnadir_mask_path):
+        np.save(os.path.join(train_output_dir, 'faroffnadir_train_masks.npy'),
+                np.concatenate([train_mask_arr for i in range(18, 27)]))
+    else:
+        if verbose:
+            print('     {} exists, skipping...'.format(faroffnadir_mask_path))
+    train_mask_arr = None
+    gc.collect()
+    if verbose:
+        print('Saving training image arrays...')
     if not os.path.exists(train_output_dir):
         os.mkdir(train_output_dir)
     if verbose:
         print('Saving training image array...')
+    gc.collect()
+    train_im_arr = np.concatenate([train_im_arr[i, :, :, :, :]
+                                   for i in range(n_collects)])
     # flatten the collect axis during saving for ease of use in model
     np.save(os.path.join(train_output_dir,
                          'all_train_ims.npy'),
-            np.concatenate([train_im_arr[i, :, :, :, :] for i in
-                            range(n_collects)]))
-    gc.collect()
+            train_im_arr)
     if mk_angle_splits:
         if verbose:
             print('  Saving sub-arrays for each subset of angles...')
@@ -155,16 +189,9 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
                                          'offnadir_train_ims.npy')
         faroffnadir_arr_path = os.path.join(train_output_dir,
                                             'faroffnadir_train_ims.npy')
-        nadir_mask_path = os.path.join(train_output_dir,
-                                       'nadir_train_masks.npy')
-        offnadir_mask_path = os.path.join(train_output_dir,
-                                          'offnadir_train_masks.npy')
-        faroffnadir_mask_path = os.path.join(train_output_dir,
-                                             'faroffnadir_train_masks.npy')
         if not skip_existing or not os.path.exists(nadir_arr_path):
             np.save(os.path.join(train_output_dir, 'nadir_train_ims.npy'),
-                    np.concatenate([train_im_arr[i, :, :, :, :]
-                                    for i in range(11)]))  # first 11 are nadir
+                    train_im_arr[0:len(unique_chips)*11, :, :, :])  # first 11 are nadir
         else:
             if verbose:
                 print('Saved numpy array {} exists, skipping...'.format(nadir_arr_path))
@@ -172,8 +199,7 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
             if verbose:
                 print('    Saving off-nadir training arrays...')
             np.save(os.path.join(train_output_dir, 'offnadir_train_ims.npy'),
-                    np.concatenate([train_im_arr[i, :, :, :, :]
-                                    for i in range(11, 18)]))  # these are off-nadir
+                    train_im_arr[len(unique_chips)*11:len(unique_chips)*18, :, :, :])  # these are off-nadir
         else:
             if verbose:
                 print('Saved numpy array {} exists, skipping...'.format(offnadir_arr_path))
@@ -181,31 +207,10 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
             if verbose:
                 print('    Saving far-off-nadir training arrays...')
             np.save(os.path.join(train_output_dir, 'faroffnadir_train_ims.npy'),
-                    np.concatenate([train_im_arr[i, :, :, :, :]
-                                    for i in range(18, 27)]))  # these are far-off
+                    train_im_arr[18*len(unique_chips):, :, :, :, :])
         else:
             if verbose:
                 print('Saved numpy array {} exists, skipping...'.format(faroffnadir_arr_path))
-        if verbose:
-            print('    Saving masks for subsets...')
-        if not skip_existing or not os.path.exists(nadir_mask_path):
-            np.save(os.path.join(train_output_dir, 'nadir_train_masks.npy'),
-                    np.concatenate([train_mask_arr for i in range(11)]))
-        else:
-            if verbose:
-                print('     {} exists, skipping...'.format(nadir_mask_path))
-        if not skip_existing or not os.path.exists(offnadir_mask_path):
-            np.save(os.path.join(train_output_dir, 'offnadir_train_masks.npy'),
-                    np.concatenate([train_mask_arr for i in range(11, 18)]))
-        else:
-            if verbose:
-                print('     {} exists, skipping...'.format(offnadir_mask_path))
-        if not skip_existing or not os.path.exists(faroffnadir_mask_path):
-            np.save(os.path.join(train_output_dir, 'faroffnadir_train_masks.npy'),
-                    np.concatenate([train_mask_arr for i in range(18, 27)]))
-        else:
-            if verbose:
-                print('     {} exists, skipping...'.format(faroffnadir_mask_path))
 
     if verbose:
         print('Cleaning up training arrays...')
