@@ -322,7 +322,7 @@ def make_test_arrs(rgb_src_dir, dest_path, mk_angle_splits=False, verbose=False,
         angles = np.array(
             [int((f.split('_')[2].strip('nadir'))) for f in all_im_list]
             )
-        im_arr = np.empty(shape=(angles.size, 900, 900, 3))
+        im_arr = np.empty(shape=(angles.size, 900, 900, 3), dtype='uint8')
         if verbose:
             print('Making image array...')
         n_ims = len(all_im_list)
@@ -332,7 +332,7 @@ def make_test_arrs(rgb_src_dir, dest_path, mk_angle_splits=False, verbose=False,
                 # normalize image to 0-1 range while loading into the array
                 im_arr[im_idx,
                        :, :, :] = io.imread(os.path.join(
-                           rgb_src_dir, all_im_list[im_idx]))/255
+                           rgb_src_dir, all_im_list[im_idx]))
         if verbose:
             print('Saving test image array...')
         np.save(os.path.join(output_dir, 'all_test_ims.npy'), im_arr)
