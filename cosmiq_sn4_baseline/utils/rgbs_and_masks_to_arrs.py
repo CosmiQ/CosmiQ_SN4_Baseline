@@ -95,7 +95,7 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
         if verbose:
             print('Making image array...')
         im_arr = np.empty(shape=(len(space_base.COLLECTS), len(unique_chips),
-                                     900, 900, 3), dtype='float16')  # higher precision unnecessary
+                                     900, 900, 3), dtype='uint8')
         for collect_idx in range(n_collects):
             if verbose:
                 print('  Working on collect #{} of 27...'.format(collect_idx))
@@ -107,11 +107,10 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
                                     space_base.COLLECTS[collect_idx],
                                     unique_chips[chip_idx]]) + '.tif'
                 train_im_ids.append(im_fname)
-                # normalize image to 0-1 range while loading into the array
                 im_arr[collect_idx,
                        chip_idx,
                        :, :, :] = io.imread(os.path.join(rgb_src_dir,
-                                                         im_fname))/255
+                                                         im_fname))
     if verbose:
         print('Initial image preparation complete.')
         print('Splitting masks into training and validation sets:')
@@ -136,7 +135,7 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
     if verbose:
         print('Saving training mask array...')
     np.save(os.path.join(train_output_dir, 'all_train_masks.npy'),
-            np.concatenate([train_mask_arr
+            np.concatenate([train_mask_arr.astype('bool')
                             for i in range(len(space_base.COLLECTS))]))
     nadir_mask_path = os.path.join(train_output_dir,
                                    'nadir_train_masks.npy')
