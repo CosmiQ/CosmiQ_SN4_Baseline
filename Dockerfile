@@ -32,6 +32,7 @@ RUN apt-get update \
     python-wheel \
     python-setuptools \
     unzip \
+		vim \
     wget \
     build-essential \
   && apt-get clean \

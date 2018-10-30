@@ -4,7 +4,7 @@ _This library is still in its final debugging stages. Check back soon for the ma
 
 ### Baseline model and utilities for [SpaceNet Challenge Round 4: Off-Nadir Building Footprint Detection](https://www.topcoder.com/spacenet)
 
-This repository contains code to train baseline models to identify buildings in the SpaceNet 4: Off-Nadir Building Footprint Detection Challenge, and then use those models to generate predictions for test imagery in the competition format. See [the DownLinQ post about the baseline](https://medium.com/the-downlinq) for more information.
+This repository contains code to train baseline models to identify buildings in the SpaceNet 4: Off-Nadir Building Footprint Detection Challenge, and then use those models to generate predictions for test imagery in the competition format. See [the DownLinQ post about the baseline](https://medium.com/the-downlinq/a-baseline-model-for-the-spacenet-4-off-nadir-building-detection-challenge-6b7983312b4b) for more information.
 
 ### Table of Contents:
 - [Requirements](#requirements)
@@ -21,6 +21,7 @@ This repository contains code to train baseline models to identify buildings in 
 - NVIDIA GPUs (see notes under Dockerfile and pip in [Installation](#installation))
 - Tensorflow-GPU
 - Tensorboard (for live monitoring of model training)
+- nvidia-docker 2
 ---
 ## Repository contents
 - __cosmiq_sn4_baseline directory, setup.py, and MANIFEST.in__: Required components of the pip-installable cosmiq_sn4_baseline module. Components of that module:

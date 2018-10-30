@@ -56,7 +56,15 @@ def main():
         '--create_splits', '-s', action='store_const', const=True,
         default=False, help='Create nadir, off-nadir, and far-off-nadir subarrays. Takes up more hard disk space.'
     )
+    parser.add_argument(
+        '--overwrite', '-ow', action='store_const', const=True,
+        default=False, help='Overwrite existing files if present.'
+    )
     args = parser.parse_args()
+    if args.overwrite:
+        skip_existing = False
+    else:
+        skip_existing = True
     if args.verbose:
         print('------------------------------------------------------------')
         print('                 Checking directories... ')
@@ -85,13 +93,15 @@ def main():
         print('         Making 8-bit RGB images for training. ')
         print('------------------------------------------------------------')
     space_base.utils.make_rgbs(train_src_dir, train_rgb_dir,
-                               verbose=args.verbose)
+                               verbose=args.verbose,
+                               skip_existing=skip_existing)
     if args.verbose:
         print('------------------------------------------------------------')
         print('         Making 8-bit RGB images for testing. ')
         print('------------------------------------------------------------')
     space_base.utils.make_rgbs(test_src_dir, test_rgb_dir,
-                               verbose=args.verbose)
+                               verbose=args.verbose,
+                               skip_existing=skip_existing)
     if args.verbose:
         print('------------------------------------------------------------')
         print('             Making masks from geojsons. ')
@@ -108,15 +118,15 @@ def main():
         print('------------------------------------------------------------')
     space_base.utils.rgbs_and_masks_to_arrs(
         train_rgb_dir, args.output_dir, train_mask_dir,
-        train_val_split=0.8, mk_angle_splits=args.create_splits,
-        verbose=args.verbose)
+        mk_angle_splits=args.create_splits,
+        verbose=args.verbose, skip_existing=skip_existing)
     if args.verbose:
         print('------------------------------------------------------------')
         print('     Creating test numpy arrays. This will be faster. ')
         print('------------------------------------------------------------')
     space_base.utils.rgbs_and_masks_to_arrs(
         test_rgb_dir, os.path.join(args.output_dir, 'test_data'),
-        verbose=args.verbose
+        verbose=args.verbose, skip_existing=skip_existing
         )
     if args.verbose:
         print('------------------------------------------------------------')

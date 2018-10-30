@@ -94,6 +94,8 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
         train_im_ids = []
         if verbose:
             print('Making image array...')
+        im_arr = np.empty(shape=(len(space_base.COLLECTS), len(unique_chips),
+                                     900, 900, 3), dtype='float16')  # higher precision unnecessary
         for collect_idx in range(n_collects):
             if verbose:
                 print('  Working on collect #{} of 27...'.format(collect_idx))
@@ -124,9 +126,9 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
         print('Saving chip indices corresponding to train and validation sets.')
         print("YOU'LL NEED THESE FILES IF YOU WANT TO REBUILD THE SAME SPLIT!")
     np.save(os.path.join(dest_path, 'training_chip_ids.npy'),
-            unique_chips[train_inds])
+            np.array(unique_chips)[train_inds])
     np.save(os.path.join(dest_path, 'validation_chip_ids.npy'),
-            unique_chips[val_inds])
+            np.array(unique_chips)[val_inds])
     if verbose:
         print('Splitting train data into training and validation...')
     train_im_arr = im_arr[:, train_inds, :, :, :]
@@ -284,7 +286,6 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
         else:
             if verbose:
                 print('     {} exists, skipping...'.format(faroffnadir_mask_path))
-
 
 
 def make_test_arrs(rgb_src_dir, dest_path, mk_angle_splits=False, verbose=False,
