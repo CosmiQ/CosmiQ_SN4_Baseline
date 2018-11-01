@@ -183,7 +183,6 @@ class DataGenerator(keras.utils.Sequence):
         return X, y
 
 
-
 class FlatDataGenerator(keras.utils.Sequence):
     """Data generator to produce matching image-mask pairs from the generator array."""
     def __init__(self, image_arr, mask_arr, batch_size=32, crop=False,

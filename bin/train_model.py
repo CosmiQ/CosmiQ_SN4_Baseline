@@ -14,7 +14,7 @@ parser.add_argument('--output_path', '-o', type=str, default='model.hdf5',
 parser.add_argument('--subset', '-s', type=str, default='all',
                     help='Data to train the model on. Options are ' +
                     '`all`, `nadir`, `offnadir`, or `faroffnadir`.')
-parser.add_argument('--seed', '-e', type=int, default=1337,
+parser.add_argument('--seed', '-e', type=int, default=42,
                     help='Randomization seed for initialization and datagen.')
 parser.add_argument('--model', '-m', type=str, default='ternausnetv1',
                     help='Model architecture. Either `ternausnetv1` or `unet`.' +
@@ -101,7 +101,7 @@ def main(dataset, model='ternausnetv1', data_path='',
     print("                 MODEL ARCHITECTURE: {}".format(model))
     print("                   OPTIMIZER: {}".format(model_args['optimizer']))
     print("                     DATASET: {}".format(dataset))
-    print("                 INPUT SHAPE: {}".format(model_args['input_shape']))
+    print("                 INPUT SHAPE: {}".format(model_args['input_size']))
     print("                      BATCH SIZE: {}".format(batch_size))
     print("                   LEARNING RATE: {}".format(model_args['lr']))
     print("<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>")
@@ -125,8 +125,8 @@ def main(dataset, model='ternausnetv1', data_path='',
                           verbose=True, **model_args)
     model.fit_generator(
         training_gen, validation_data=validation_gen,
-        validation_steps=np.floor(val_im_arr.shape[1]/batch_size),
-        steps_per_epoch=np.floor(train_im_arr.shape[1]/batch_size),
+        validation_steps=np.floor(val_im_arr.shape[0]/batch_size),
+        steps_per_epoch=np.floor(train_im_arr.shape[0]/batch_size),
         epochs=1000, callbacks=callbax
         )
     model.save(output_path)
