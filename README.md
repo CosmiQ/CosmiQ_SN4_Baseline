@@ -1,7 +1,5 @@
 # CosmiQ_SN4_Baseline
-
-_This library is still in its final debugging stages. Check back soon for the mature version._
-
+![version](https://img.shields.io/badge/version-v1.0.0-green.svg) [![tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Check%20out%20the%20CosmiQ%20SpaceNet%204%20Baseline%20Model%20on%20GitHub!&url=https://github.com/cosmiq/cosmiq_sn4_baseline)
 ### Baseline model and utilities for [SpaceNet Challenge Round 4: Off-Nadir Building Footprint Detection](https://www.topcoder.com/spacenet)
 
 This repository contains code to train baseline models to identify buildings in the SpaceNet 4: Off-Nadir Building Footprint Detection Challenge, and then use those models to generate predictions for test imagery in the competition format. See [the DownLinQ post about the baseline](https://medium.com/the-downlinq/a-baseline-model-for-the-spacenet-4-off-nadir-building-detection-challenge-6b7983312b4b) for more information.
