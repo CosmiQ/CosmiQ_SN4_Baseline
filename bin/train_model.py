@@ -30,8 +30,11 @@ np.random.seed(args.seed)
 import tensorflow as tf
 tf.set_random_seed(args.seed)
 from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
-import cosmiq_sn4_baseline as space_base
-
+from cosmiq_sn4_baseline.DataGenerator import FlatDataGenerator
+from cosmiq_sn4_baseline.callbacks import TerminateOnMetricNaN
+from cosmiq_sn4_baseline.losses import hybrid_bce_jaccard
+from cosmiq_sn4_baseline.metrics import precision, recall
+from cosmiq_sn4_baseline.models import compile_model
 
 def main(dataset, model='ternausnetv1', data_path='',
          output_path='model.hdf5', tb_dir=''):
@@ -80,13 +83,13 @@ def main(dataset, model='ternausnetv1', data_path='',
     val_mask_arr = np.load(val_mask_path, mmap_mode='r')
 
     # create generators for training and validation
-    training_gen = space_base.DataGenerator.FlatDataGenerator(
+    training_gen = FlatDataGenerator(
         train_im_arr, train_mask_arr, batch_size=batch_size, crop=True,
         output_x=model_args['input_size'][1],
         output_y=model_args['input_size'][0],
         flip_x=True, flip_y=True, rotate=True
         )
-    validation_gen = space_base.DataGenerator.FlatDataGenerator(
+    validation_gen = FlatDataGenerator(
         val_im_arr, val_mask_arr, batch_size=batch_size, crop=True,
         output_x=model_args['input_size'][1],
         output_y=model_args['input_size'][0]
@@ -107,19 +110,19 @@ def main(dataset, model='ternausnetv1', data_path='',
     callbax = []
     callbax.append(ModelCheckpoint(tmp_model_path, monitor=monitor,
                                    save_best_only=True))
-    callbax.append(space_base.callbacks.TerminateOnMetricNaN('precision'))
+    callbax.append(TerminateOnMetricNaN('precision'))
     callbax.append(EarlyStopping(monitor=monitor,
                                  patience=early_stopping_patience,
                                  mode='max'))
     if tb_dir:  # if saving tensorboard logs
         callbax.append(TensorBoard(
             log_dir=os.path.join(tb_dir, model_name)))
-    lf = space_base.losses.hybrid_bce_jaccard
-    am = [space_base.metrics.precision,
-          space_base.metrics.recall]
-    model = space_base.compile_model(arch=model, loss_func=lf,
-                                     additional_metrics=am,
-                                     verbose=True, **model_args)
+    lf = hybrid_bce_jaccard
+    am = [precision,
+          recall]
+    model = compile_model(arch=model, loss_func=lf,
+                          additional_metrics=am,
+                          verbose=True, **model_args)
     model.fit_generator(
         training_gen, validation_data=validation_gen,
         validation_steps=np.floor(val_im_arr.shape[1]/batch_size),
