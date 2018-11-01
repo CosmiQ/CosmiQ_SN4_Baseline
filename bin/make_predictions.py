@@ -15,13 +15,9 @@ if __name__ == '__main__':
         help='Path to the trained .hdf5 model file to use to generate predictions.'
         )
     parser.add_argument(
-        '--test_dataset_path', '-t', type=str, required=True,
-        help='Path to all_test_ims.npy produced by make_np_arrays.py.'
+        '--test_data_path', '-t', type=str, required=True,
+        help='Path to the test_data directory produced by make_np_arrays.py.'
         )
-    parser.add_argument(
-        '--test_fnames_path', '-f', type=str, required=True,
-        help='Path to [all/nadir/offnadir/faroffnadir]_im_fnames.npy produced by make_np_arrays.py.'
-    )
     parser.add_argument(
         '--output_dir', '-o', type=str, default='test_output',
         help='Directory to output inference csv and geojsons.'
@@ -81,8 +77,13 @@ if __name__ == '__main__':
 
     if args.verbose:
         print('Loading test dataset...')
-    test_dataset = np.load(args.test_dataset_path, mmap_mode='r')
-    test_fnames = np.load(args.test_fnames_path)
+    test_dataset_path = os.path.join(args.test_data_path, 'test',
+                                     'all_test_ims.npy')
+    test_fnames_path = os.path.join(args.test_data_path, 'test',
+                                    'test_im_fnames.npy')
+    geotiff_path = os.path.join(args.test_data_path, 'geotiffs')
+    test_dataset = np.load(test_dataset_path, mmap_mode='r')
+    test_fnames = np.load(test_fnames_path)
 
     # subset test angles
     test_angle_mask = np.array([True for i in range(test_dataset.shape[0])])
@@ -137,7 +138,6 @@ if __name__ == '__main__':
                                      rm_cutoff=args.footprint_threshold)
 
     geojson_output_dir = os.path.join(args.output_dir, 'output_geojson')
-    geotiff_path = os.path.join(args.test_dataset_dir, 'geotiffs')
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
     if not os.path.exists(geojson_output_dir):
@@ -147,36 +147,29 @@ if __name__ == '__main__':
                       ' same name as outputs already exist there,' +
                       ' this will cause errors.')
     chip_summary_list = []
-    for angle_idx in range(test_dataset.shape[0]):
-        angle_gj_path = os.path.join(geojson_output_dir,
-                                     test_collect_names[angle_idx])
-        if not os.path.exists(angle_gj_path):
-            os.mkdir(angle_gj_path)
-        for chip_idx in range(test_dataset.shape[1]):
-            im_fname = [f for f in os.listdir(geotiff_path)
-                        if test_fnames[chip_idx] in f][0]
-            raw_test_im = rasterio.open(os.path.join(geotiff_path, im_fname))
-            preds_test = preds_arr[angle_idx, chip_idx, :, :] > 0.5
-            preds_test = preds_test.astype('uint8')
-            pred_geojson_path = os.path.join(
-                angle_gj_path, test_collect_names[angle_idx] + '_' +
-                str(test_fnames[chip_idx]) + '.json'
+    for idx in range(test_dataset.shape[0]):
+        im_fname = [f for f in os.listdir(geotiff_path)
+                    if test_fnames[idx] in f][0]
+        raw_test_im = rasterio.open(os.path.join(geotiff_path, im_fname))
+        preds_test = preds_arr[idx, :, :] > 0.5
+        preds_test = preds_test.astype('uint8')
+        pred_geojson_path = os.path.join(
+            geojson_output_dir, str(test_fnames[idx]).strip('.tif') + '.json'
+            )
+        try:
+            preds_geojson = cLT.createGeoJSONFromRaster(
+                pred_geojson_path, preds_test,
+                raw_test_im.profile['transform'],
+                raw_test_im.profile['crs']
                 )
-            try:
-                preds_geojson = cLT.createGeoJSONFromRaster(
-                    pred_geojson_path, preds_test,
-                    raw_test_im.profile['transform'],
-                    raw_test_im.profile['crs']
-                    )
-            except ValueError:
-                print('Warning: Empty prediction array for ' +
-                      'angle {}, chip {}'.format(str(test_angles[angle_idx]),
-                                                 str(test_fnames[chip_idx])))
-            chip_summary = {'chipName': im_fname,
-                            'geoVectorName': pred_geojson_path,
-                            'imageId': test_collect_names[angle_idx] + '_' +
-                            test_fnames[chip_idx]}
-            chip_summary_list.append(chip_summary)
+        except ValueError:
+            print('Warning: Empty prediction array for ' +
+                  'image {}'.format(str(test_fnames[idx])))
+        chip_summary = {
+            'chipName': im_fname, 'geoVectorName': pred_geojson_path,
+            'imageId': str(test_fnames[idx]).lstrip('Pan-Sharpen_').rstrip('.tif')
+            }
+        chip_summary_list.append(chip_summary)
     csv_output_path = os.path.join(args.output_dir, 'predictions.csv')
     cLT.createCSVSummaryFile(chip_summary_list, csv_output_path,
                              rasterChipDirectory=geotiff_path,
