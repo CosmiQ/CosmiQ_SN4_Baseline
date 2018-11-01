@@ -15,7 +15,7 @@ setup(
                       'rasterio>=1.0.7', 'opencv-python',
                       'spacenetutilities', 'keras>=2.2.2',
                       'tensorflow>=1.10.0', 'tensorboard>=1.10.0',
-                      'setuptools'],  # TODO: UPDATE
+                      'setuptools', 'shapely', 'geopandas'],
     scripts=[
             'bin/make_np_arrays.py',
             'bin/train_model.py',

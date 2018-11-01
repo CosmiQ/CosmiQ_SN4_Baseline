@@ -1,12 +1,15 @@
 import os
 import numpy as np
 import spacenetutilities.labeltools.coreLabelTools as cLT
+from spacenetutilities import geoTools as gT
 import cosmiq_sn4_baseline as space_base
 import argparse
 import rasterio
 from keras.models import load_model
 import warnings
 from cosmiq_sn4_baseline.inference import infer
+from shapely.geometry import shape
+import geopandas as gpd
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -60,6 +63,12 @@ if __name__ == '__main__':
              'be averaged. Helps avoid edge effects. Defaults to 64 pxs. ' +
              'to have no overlap between windows, use the size of the ' +
              'window being tested (512 for ternausnetv1 and unet defaults)'
+    )
+    parser.add_argument(
+        '--simplification_threshold', '-s', type=int, default=0,
+        help='Threshold for simplifying polygons using ' +
+        'shapely.shape.simplify() in units of meters. By default, performs ' +
+        'no simplification.'
     )
     args = parser.parse_args()
 
@@ -157,11 +166,30 @@ if __name__ == '__main__':
             geojson_output_dir, str(test_fnames[idx]).strip('.tif') + '.json'
             )
         try:
-            preds_geojson = cLT.createGeoJSONFromRaster(
-                pred_geojson_path, preds_test,
-                raw_test_im.profile['transform'],
-                raw_test_im.profile['crs']
-                )
+            # generate shapes, a geoDataFrame, and geojson from objects. This
+            # follows the same steps as cLT.createGeoJSONFromRaster, but it's
+            # done manually to allow us to simplify the objects partway
+            # through.
+            shapes = cLT.polygonize(preds_test,
+                                    raw_test_im.profile['transform'])
+            geom_list = []
+            raster_val_list = []
+            for s in shapes:
+                # the simplify command in the next line cleans up the polygon
+                # vertices, and is essential to avoid polygons with absurd
+                # numbers of points. Given the SN4 crs, the simplification
+                # threshold is in units of meters.
+                geom_list.append(shape(s[0]).simplify(
+                    tolerance=args.simplification_threshold,
+                    preserve_topology=False
+                    ))
+                raster_val_list.append(s[1])
+            feature_gdf = gpd.GeoDataFrame({'geometry': geom_list,
+                                            'rasterVal': raster_val_list})
+            feature_gdf.crs = raw_test_im.profile['crs']
+            feature_gdf['conf'] = 1  # placeholder for confidence value
+            gT.exporttogeojson(pred_geojson_path, feature_gdf)
+
         except ValueError:
             print('Warning: Empty prediction array for ' +
                   'image {}'.format(str(test_fnames[idx])))
