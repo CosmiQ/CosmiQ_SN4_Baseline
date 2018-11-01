@@ -123,12 +123,11 @@ _Arguments:_
 - `--model`, `-m`: Options are 'ternausnetv1' (default) and 'unet'. See cosmiq_sn4_baseline.models for details on model architecture.
 - `--tensorboard_dir`, `-t`: Destination directory for tensorboard log writing. Optional, only required if you want to use tensorboard to visualize training.
 
-__make_predictions.py__ --model_path (path) --test_dataset_path (path to all_test_ims.npy) --chip_names_path (path to test_chip_ids.npy) --output_dir (desired directory for outputs) [--verbose --angle_set ('all', 'nadir', 'offnadir', or 'faroffnadir') --angle (integer angles) --n_chips (integer number of unique chips to predict for each angle) --randomize_chips (randomize the order of chips before subsetting) --footprint_threshold (integer minimum number of pixels for a footprint to be kept) --window_step (integer number of pixels to step in x,y directions during inference)]
+__make_predictions.py__ --model_path (path) --test_data_path (path to test_data/) --output_dir (desired directory for outputs) [--verbose --angle_set ('all', 'nadir', 'offnadir', or 'faroffnadir') --angle (integer angles) --n_chips (integer number of unique chips to predict for each angle) --randomize_chips (randomize the order of chips before subsetting) --footprint_threshold (integer minimum number of pixels for a footprint to be kept) --window_step (integer number of pixels to step in x,y directions during inference)]
 make_predictions.py runs inference on the test image set. It scans across the X,Y axes of each images in step size (`--window_step`, defaults to 64), producing overlapping predictions, and then averages the predictions. This helps reduce edge effects.
 _Arguments:_  
 - `--model_path`, `-m`: path to the .hdf5 or .h5 file saved by train_model.py.
-- `--test_dataset_path`, `-t`: path to all_test_ims.npy produced by make_np_arrays.py.
-- `--chip_names_path`, `-c`: path to test_chip_ids.npy produced by make_np_arrays.py.
+- `--test_data_path`, `-t`: Path to the test_data directory produced by make_np_arrays.py.
 - `--output_dir`, `-o`: path to the desired output directory to save data to. Defaults to test_output in the current working directory. The directory structure will be thus:
 ```
 output_dir
