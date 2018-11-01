@@ -145,5 +145,6 @@ output_dir
 - `--randomize_chips`, `-r`: Randomize order of chips prior to subsetting? Defaults to `False`. Only has an effect if using `--n_chips`.
 - `--footprint_threshold`, `-ft`: Minimum footprint size to be kept as a building prediction. Defaults to 0.
 - `--window_step`, `-ws`: Step size for sliding window during inference. Defaults to 64.
+- `--simplification_threshold`, `-s`: Threshold, in meters, for simplifying polygon vertices. Defaults to 0 (no simplification). Failure to simplify can result in _very_ large .csv outputs (>500 MB), which are too big to use in submission for the competition.
 
 Good luck in SpaceNet 4: Off-Nadir Buildings!

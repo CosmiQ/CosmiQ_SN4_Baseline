@@ -30,6 +30,7 @@ np.random.seed(args.seed)
 import tensorflow as tf
 tf.set_random_seed(args.seed)
 from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
+from keras.callbacks import ReduceLROnPlateau
 from cosmiq_sn4_baseline.DataGenerator import FlatDataGenerator
 from cosmiq_sn4_baseline.callbacks import TerminateOnMetricNaN
 from cosmiq_sn4_baseline.losses import hybrid_bce_jaccard
@@ -64,13 +65,13 @@ def main(dataset, model='ternausnetv1', data_path='',
     val_mask_path = os.path.join(data_path, 'validate',
                                  dataset + '_val_masks.npy')
 
-    batch_size = 4
+    batch_size = 8
     early_stopping_patience = 50
     model_args = {
         'optimizer': 'Nadam',
         'input_size': (512, 512, 3),
         'base_depth': 64,
-        'lr': 0.0001
+        'lr': 0.0002
     }
     # reduce base_depth to 32 if using vanilla unet
     if model == 'unet':
@@ -108,6 +109,8 @@ def main(dataset, model='ternausnetv1', data_path='',
     print()
 
     callbax = []
+    callbax.append(ReduceLROnPlateau(factor=0.2, patience=3, verbose=1,
+                                     min_delta=0.01))
     callbax.append(ModelCheckpoint(tmp_model_path, monitor=monitor,
                                    save_best_only=True))
     callbax.append(TerminateOnMetricNaN('precision'))
