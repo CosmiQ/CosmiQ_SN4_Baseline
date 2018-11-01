@@ -229,7 +229,7 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
             print('Saving val image array...')
         # flatten the collect axis during saving for ease of use in model
         np.save(os.path.join(val_output_dir,
-                             'all_val_ims.npy'),
+                             'all_val_.npy'),
                 np.concatenate([val_im_arr[i, :, :, :, :] for i in
                                 range(n_collects)]))
     if mk_angle_splits:
@@ -273,6 +273,11 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
         else:
             if verbose:
                 print('Saved numpy array {} exists, skipping...'.format(faroffnadir_arr_path))
+        if verbose:
+            print('    Saving masks for all nadir angles...')
+        if not skip_existing or not os.path.exists(nadir_mask_path):
+            np.save(os.path.join(val_output_dir, 'all_val_masks.npy'),
+                    np.concatenate([val_mask_arr for i in range(27)]))
         if verbose:
             print('    Saving masks for subsets...')
         if not skip_existing or not os.path.exists(nadir_mask_path):
