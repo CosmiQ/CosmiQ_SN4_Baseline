@@ -6,14 +6,8 @@
 #    instructions)
 # 3. Expand the .gzipped directories of images
 
-import cv2
 import os
-import sys
-from skimage import io
-import numpy as np
 import shutil
-import pandas as pd
-import rasterio
 import argparse
 import cosmiq_sn4_baseline as space_base
 

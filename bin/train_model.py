@@ -135,4 +135,4 @@ def main(dataset, model='ternausnetv1', data_path='',
 
 if __name__ == '__main__':
     main(args.subset, model=args.model, data_path=args.data_path,
-         output_path=args.output_path, tb_dir=args.tb_dir)
+         output_path=args.output_path, tb_dir=args.tensorboard_dir)

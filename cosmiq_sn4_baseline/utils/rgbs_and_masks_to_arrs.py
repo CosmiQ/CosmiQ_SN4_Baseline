@@ -97,7 +97,7 @@ def make_training_arrs(rgb_src_dir, dest_path, mask_src_dir,
         if verbose:
             print('Making image array...')
         im_arr = np.empty(shape=(len(space_base.COLLECTS), len(unique_chips),
-                                     900, 900, 3), dtype='uint8')
+                                 900, 900, 3), dtype='uint8')
         for collect_idx in range(n_collects):
             if verbose:
                 print('  Working on collect #{} of 27...'.format(collect_idx))
