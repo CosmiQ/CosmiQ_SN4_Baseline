@@ -453,7 +453,7 @@ class FileDataGenerator(keras.utils.Sequence):
             im_arr = cv2.imread(os.path.join(self.image_path, im_fname),
                                 cv2.IMREAD_COLOR)
             mask_arr = cv2.imread(os.path.join(self.mask_path, mask_fname),
-                                  cv2.IMREAD_GRAYSCALE)
+                                  cv2.IMREAD_GRAYSCALE)[:, :, np.newaxis]
             if self.zoom_range is not None:
                 im_arr = cv2.resize(
                     im_arr,
