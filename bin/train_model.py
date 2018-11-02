@@ -92,7 +92,7 @@ def main(dataset, model='ternausnetv1', data_path='', mask_path='',
     early_stopping_patience = 15
     model_args = {
         'optimizer': 'Nadam',
-        'input_size': (512, 512, 3),
+        'input_shape': (512, 512, 3),
         'base_depth': 64,
         'lr': 0.0002
     }
@@ -110,14 +110,14 @@ def main(dataset, model='ternausnetv1', data_path='', mask_path='',
         # create generators for training and validation
         training_gen = FlatDataGenerator(
             train_im_arr, train_mask_arr, batch_size=batch_size, crop=True,
-            output_x=model_args['input_size'][1],
-            output_y=model_args['input_size'][0],
+            output_x=model_args['input_shape'][1],
+            output_y=model_args['input_shape'][0],
             flip_x=True, flip_y=True, rotate=True
             )
         validation_gen = FlatDataGenerator(
             val_im_arr, val_mask_arr, batch_size=batch_size, crop=True,
-            output_x=model_args['input_size'][1],
-            output_y=model_args['input_size'][0]
+            output_x=model_args['input_shape'][1],
+            output_y=model_args['input_shape'][0]
             )
         n_train_ims = train_im_arr.shape[0]
         n_val_ims = val_im_arr.shape[0]
@@ -127,9 +127,7 @@ def main(dataset, model='ternausnetv1', data_path='', mask_path='',
         np.random.shuffle(unique_chips)
         number_train_chips = int(len(unique_chips)*0.8)
         train_chips = unique_chips[:number_train_chips]
-        print(train_chips)
         val_chips = unique_chips[number_train_chips:]
-        print(val_chips)
         im_fnames = get_files_recursively(data_path,
                                           traverse_subdirs=recursive)
         if dataset != 'all':
@@ -140,7 +138,8 @@ def main(dataset, model='ternausnetv1', data_path='', mask_path='',
             elif dataset == 'faroffnadir':
                 collect_subset = space_base.COLLECTS[18:]
             im_fnames = [f for f in im_fnames if
-                         any(c for c in collect_subset in f)]
+                         any(c in f for c in collect_subset)]
+            print(collect_subset)
         n_ims = len(im_fnames)
         print('n_ims: {}'.format(n_ims))
         n_train_ims = np.floor(n_ims*0.8)
@@ -149,14 +148,14 @@ def main(dataset, model='ternausnetv1', data_path='', mask_path='',
         training_gen = FileDataGenerator(
             im_fnames, mask_path, (900, 900, 3), chip_subset=train_chips,
             batch_size=batch_size, crop=True, traverse_subdirs=recursive,
-            output_x=model_args['input_size'][1],
-            output_y=model_args['input_size'][0],
+            output_x=model_args['input_shape'][1],
+            output_y=model_args['input_shape'][0],
             flip_x=True, flip_y=True, rotate=True)
         validation_gen = FileDataGenerator(
             im_fnames, mask_path, (900, 900, 3), chip_subset=val_chips,
             batch_size=batch_size, crop=True, traverse_subdirs=recursive,
-            output_x=model_args['input_size'][1],
-            output_y=model_args['input_size'][0])
+            output_x=model_args['input_shape'][1],
+            output_y=model_args['input_shape'][0])
     monitor = 'val_loss'
     print()
     print("<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>")
@@ -164,7 +163,7 @@ def main(dataset, model='ternausnetv1', data_path='', mask_path='',
     print("                 MODEL ARCHITECTURE: {}".format(model))
     print("                   OPTIMIZER: {}".format(model_args['optimizer']))
     print("                     DATASET: {}".format(dataset))
-    print("                 INPUT SHAPE: {}".format(model_args['input_size']))
+    print("                 INPUT SHAPE: {}".format(model_args['input_shape']))
     print("                      BATCH SIZE: {}".format(batch_size))
     print("                   LEARNING RATE: {}".format(model_args['lr']))
     print("<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>")
