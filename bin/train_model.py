@@ -7,13 +7,24 @@ parser = argparse.ArgumentParser(description='Train the baseline model.')
 parser.add_argument('--data_path', '-d', type=str, default='',
                     help='Path to the directory containing the `train` and ' +
                     '`val` data folders. Defaults to the current working ' +
-                    'directory.')
+                    'directory. If using `--data_format files`, this must ' +
+                    'be a directory which contains the rgb files (or ' +
+                    'subdirs whose only .tif-format contents are rgb .tifs)')
+parser.add_argument('--mask_path', '-k', type=str, default='',
+                    help='Path to the directory containing the `masks` data ' +
+                    'folder. If using `--data_format files`, this must be ' +
+                    'the directory containing the masks. If not passed, it ' +
+                    'is assumed that `data_path` and `mask_path` are the same.'
+                    )
 parser.add_argument('--data_format', '-f', type=str, default='array',
                     help='Is data stored in a NumPy array (default) or as ' +
                     'image files? To use image files, pass `files` here. ' +
                     'Currently only supports 8-bit RGB TIFFs as image files.' +
-                    'If passing files, --data_path must point to the folder ' +
-                    'containing the ')
+                    'If passing files, --data_path must point to the' +
+                    ' train_rgb directory (or its equivalent).')
+parser.add_argument('--recursive', '-r', action='store_const', const=True,
+                    default=False,
+                    help='Recursively traverse subdirs in the ')
 parser.add_argument('--output_path', '-o', type=str, default='model.hdf5',
                     help='Path for saving trained model. ' +
                     'Defaults to model.hdf5 in the working directory.')
@@ -38,18 +49,23 @@ tf.set_random_seed(args.seed)
 from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from keras.callbacks import ReduceLROnPlateau
 from cosmiq_sn4_baseline.DataGenerator import FlatDataGenerator, FileDataGenerator
+from cosmiq_sn4_baseline.DataGenerator import get_files_recursively
 from cosmiq_sn4_baseline.callbacks import TerminateOnMetricNaN
 from cosmiq_sn4_baseline.losses import hybrid_bce_jaccard
 from cosmiq_sn4_baseline.metrics import precision, recall
 from cosmiq_sn4_baseline.models import compile_model
 
-def main(dataset, model='ternausnetv1', data_path='',
-         output_path='model.hdf5', tb_dir='', data_format='array'):
+
+def main(dataset, model='ternausnetv1', data_path='', mask_path='',
+         recursive=False, output_path='model.hdf5', tb_dir='',
+         data_format='array'):
 
     # create a few variables needed later.
     output_dir, model_name = os.path.split(output_path)
     tmp_model_path = os.path.join(output_dir, 'tmp_model.h5')
     tmp_weights_path = os.path.join(output_dir, 'tmp_weights.h5')
+    if not mask_path:
+        mask_path = data_path
 
     # make sure everything is clean to start:
     if os.path.exists(tmp_model_path):
@@ -66,9 +82,9 @@ def main(dataset, model='ternausnetv1', data_path='',
                                  dataset + '_train_ims.npy')
     val_im_path = os.path.join(data_path, 'validate',
                                dataset + '_val_ims.npy')
-    train_mask_path = os.path.join(data_path, 'train',
+    train_mask_path = os.path.join(mask_path, 'train',
                                    dataset + '_train_masks.npy')
-    val_mask_path = os.path.join(data_path, 'validate',
+    val_mask_path = os.path.join(mask_path, 'validate',
                                  dataset + '_val_masks.npy')
 
     batch_size = 4
@@ -105,26 +121,28 @@ def main(dataset, model='ternausnetv1', data_path='',
         n_train_ims = train_im_arr.shape[0]
         n_val_ims = val_im_arr.shape[0]
     elif data_format == 'files':
-        im_path = os.path.join(data_path, 'train_rgb')
-        mask_path = os.path.join(data_path, 'masks')
         unique_chips = [f.lstrip('mask_').rstrip('.tif')
-                        for f in os.listdir(mask_path)]
+                        for f in os.listdir(mask_path) if f.endswith('.tif')]
         np.random.shuffle(unique_chips)
         number_train_chips = int(len(unique_chips)*0.8)
         train_chips = unique_chips[:number_train_chips]
+        print(train_chips)
         val_chips = unique_chips[number_train_chips:]
-        n_ims = len([f for f in os.listdir(im_path) if f.endswith('.tif')])
+        print(val_chips)
+        im_fnames = get_files_recursively(data_path,
+                                          traverse_subdirs=recursive)
+        n_ims = len(im_fnames)
         n_train_ims = np.floor(n_ims*0.8)
         n_val_ims = np.floor(n_ims*0.2)
 
         training_gen = FileDataGenerator(
-            im_path, mask_path, (900, 900, 3), chip_subset=train_chips,
+            data_path, mask_path, (900, 900, 3), chip_subset=train_chips,
             batch_size=batch_size, crop=True,
             output_x=model_args['input_size'][1],
             output_y=model_args['input_size'][0],
             flip_x=True, flip_y=True, rotate=True)
         validation_gen = FileDataGenerator(
-            im_path, mask_path, (900, 900, 3), chip_subset=val_chips,
+            data_path, mask_path, (900, 900, 3), chip_subset=val_chips,
             batch_size=batch_size, crop=True,
             output_x=model_args['input_size'][1],
             output_y=model_args['input_size'][0])
@@ -174,5 +192,6 @@ def main(dataset, model='ternausnetv1', data_path='',
 
 if __name__ == '__main__':
     main(args.subset, model=args.model, data_path=args.data_path,
+         recursive=args.recursive, mask_path=args.mask_path,
          output_path=args.output_path, tb_dir=args.tensorboard_dir,
          data_format=args.data_format)

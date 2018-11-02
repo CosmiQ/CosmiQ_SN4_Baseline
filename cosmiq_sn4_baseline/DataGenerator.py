@@ -364,7 +364,8 @@ class FileDataGenerator(keras.utils.Sequence):
         self.mask_path = mask_path
         raw_mask_list = [f for f in os.listdir(mask_path)
                          if f.endswith('.tif')]
-        raw_image_list = self._get_files_recursively()
+        raw_image_list = get_files_recursively(self.image_path,
+                                               self.traverse_subdirs)
         if chip_subset:
             # subset the raw mask and image lists based on a list of chips
             # provided as chip_subset
@@ -394,22 +395,6 @@ class FileDataGenerator(keras.utils.Sequence):
         self.output_ctr = 0
         self.rescale_brightness = rescale_brightness
         self.on_epoch_end()
-
-    def _get_files_recursively(self):
-        """Get files from subdirs of `path`, joining them to the dir."""
-        if self.traverse_subdirs:
-            walker = os.walk(self.image_path)
-            im_path_list = []
-            for step in walker:
-                if not step[2]:  # if there are no files in the current dir
-                    continue
-                im_path_list += [os.path.join(step[0], step[1], fname)
-                                 for fname in step[2] if
-                                 fname.endswith('.tif')]
-            return im_path_list
-        else:
-            return [f for f in os.listdir(self.image_path)
-                    if f.endswith('.tif')]
 
     def on_epoch_end(self):
         'Update indices, rotations, etc. after each epoch'
@@ -562,3 +547,20 @@ class FileDataGenerator(keras.utils.Sequence):
                     y)
             self.output_ctr += 1
         return X, y
+
+
+def get_files_recursively(image_path, traverse_subdirs=False):
+    """Get files from subdirs of `path`, joining them to the dir."""
+    if traverse_subdirs:
+        walker = os.walk(image_path)
+        im_path_list = []
+        for step in walker:
+            if not step[2]:  # if there are no files in the current dir
+                continue
+            im_path_list += [os.path.join(step[0], step[1], fname)
+                             for fname in step[2] if
+                             fname.endswith('.tif')]
+        return im_path_list
+    else:
+        return [f for f in os.listdir(image_path)
+                if f.endswith('.tif')]
