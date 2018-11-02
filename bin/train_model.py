@@ -22,6 +22,12 @@ parser.add_argument('--model', '-m', type=str, default='ternausnetv1',
 parser.add_argument('--tensorboard_dir', '-t', type=str, default='',
                     help='Path to save logs for TensorBoard. ' +
                     'If not provided, no TensorBoard logs are saved.')
+parser.add_argument('--data_format', '-f', type=str, default='array',
+                    help='Is data stored in a NumPy array (default) or as ' +
+                    'image files? To use image files, pass `files` here. ' +
+                    'Currently only supports 8-bit RGB TIFFs as image files.' +
+                    'If passing files, --data_path must point to the folder ' +
+                    'containing the ')
 
 args = parser.parse_args()
 
