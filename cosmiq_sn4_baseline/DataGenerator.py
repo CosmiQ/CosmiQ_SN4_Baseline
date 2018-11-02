@@ -378,6 +378,8 @@ class FileDataGenerator(keras.utils.Sequence):
             self.mask_list = raw_mask_list
         self.image_shape = image_shape
         self.batch_size = batch_size
+        self.n_batches = int(np.floor(len(self.image_list) /
+                                      self.batch_size))
         self.output_x = output_x
         self.output_y = output_y
         self.crop = crop
@@ -524,7 +526,7 @@ class FileDataGenerator(keras.utils.Sequence):
 
         def __len__(self):
             'Denotes the number of batches per epoch'
-            return int(np.floor(self.image_list/self.batch_size))
+            return self.n_batches
 
         def __getitem__(self, index):
             'Generate one batch of data'
