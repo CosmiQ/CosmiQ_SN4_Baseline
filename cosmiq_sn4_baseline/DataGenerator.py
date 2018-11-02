@@ -449,7 +449,7 @@ class FileDataGenerator(keras.utils.Sequence):
         for i in range(self.batch_size):
             im_fname = self.image_list[image_idxs[i]]
             chip_id = '_'.join(im_fname.rstrip('.tif').split('_')[-2:])
-            mask_fname = [f for f in self.mask_list if chip_id in f]
+            mask_fname = [f for f in self.mask_list if chip_id in f][0]
             im_arr = cv2.imread(os.path.join(self.image_path, im_fname),
                                 cv2.IMREAD_COLOR)
             mask_arr = cv2.imread(os.path.join(self.mask_path, mask_fname),
