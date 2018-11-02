@@ -71,7 +71,7 @@ def main(dataset, model='ternausnetv1', data_path='',
     val_mask_path = os.path.join(data_path, 'validate',
                                  dataset + '_val_masks.npy')
 
-    batch_size = 8
+    batch_size = 4
     early_stopping_patience = 15
     model_args = {
         'optimizer': 'Nadam',
@@ -119,12 +119,14 @@ def main(dataset, model='ternausnetv1', data_path='',
 
         training_gen = FileDataGenerator(
             im_path, mask_path, (900, 900, 3), chip_subset=train_chips,
-            crop=True, output_x=model_args['input_size'][1],
+            batch_size=batch_size, crop=True,
+            output_x=model_args['input_size'][1],
             output_y=model_args['input_size'][0],
             flip_x=True, flip_y=True, rotate=True)
         validation_gen = FileDataGenerator(
             im_path, mask_path, (900, 900, 3), chip_subset=val_chips,
-            crop=True, output_x=model_args['input_size'][1],
+            batch_size=batch_size, crop=True,
+            output_x=model_args['input_size'][1],
             output_y=model_args['input_size'][0])
     monitor = 'val_loss'
     print()
