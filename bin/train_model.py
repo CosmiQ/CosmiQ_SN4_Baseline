@@ -132,6 +132,7 @@ def main(dataset, model='ternausnetv1', data_path='', mask_path='',
         im_fnames = get_files_recursively(data_path,
                                           traverse_subdirs=recursive)
         n_ims = len(im_fnames)
+        print('n_ims: {}'.format(n_ims))
         n_train_ims = np.floor(n_ims*0.8)
         n_val_ims = np.floor(n_ims*0.2)
 

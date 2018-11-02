@@ -366,6 +366,7 @@ class FileDataGenerator(keras.utils.Sequence):
                          if f.endswith('.tif')]
         raw_image_list = get_files_recursively(self.image_path,
                                                self.traverse_subdirs)
+        print('raw image list: {}'.format(raw_image_list))
         if chip_subset:
             # subset the raw mask and image lists based on a list of chips
             # provided as chip_subset
@@ -452,6 +453,8 @@ class FileDataGenerator(keras.utils.Sequence):
         for i in range(self.batch_size):
             im_path = self.image_list[image_idxs[i]]
             chip_id = '_'.join(im_path.rstrip('.tif').split('_')[-2:])
+            if chip_id.endswith('_image'):
+                chip_id = chip_id.rstrip('_image')
             mask_path = [f for f in self.mask_list if chip_id in f][0]
             im_arr = cv2.imread(im_path, cv2.IMREAD_COLOR)
             mask_arr = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
