@@ -110,7 +110,7 @@ def main(dataset, model='ternausnetv1', data_path='',
         unique_chips = [f.lstrip('mask_').rstrip('.tif')
                         for f in os.listdir(mask_path)]
         np.random.shuffle(unique_chips)
-        number_train_chips = int(len(unique_chips))*0.8
+        number_train_chips = int(len(unique_chips)*0.8)
         train_chips = unique_chips[:number_train_chips]
         val_chips = unique_chips[number_train_chips:]
         n_ims = len([f for f in os.listdir(im_path) if f.endswith('.tif')])
