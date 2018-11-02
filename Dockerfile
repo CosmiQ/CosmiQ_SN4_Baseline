@@ -123,6 +123,6 @@ RUN git clone https://github.com/SpaceNetChallenge/utilities.git && cd utilities
     pip install --no-cache-dir --no-dependencies -e .
 
 RUN source activate space_base && \
-	  pip install -e git+git://github.com/cosmiq/cosmiq_sn4_baseline.git@1.0.0#egg=cosmiq_sn4_baseline-1.0.0
+	  pip install -e git+git://github.com/cosmiq/cosmiq_sn4_baseline.git@1.0.1#egg=cosmiq_sn4_baseline-1.0.1
 
 RUN ["/bin/bash"]
