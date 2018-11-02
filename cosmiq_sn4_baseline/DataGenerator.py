@@ -354,25 +354,27 @@ class FlatDataGenerator(keras.utils.Sequence):
 
 
 class FileDataGenerator(keras.utils.Sequence):
-    def __init__(self, image_path, mask_path, image_shape, chip_subset=[],
-                 batch_size=32, crop=False, output_x=256, output_y=256,
-                 shuffle=True, flip_x=False, flip_y=False, zoom_range=None,
+    def __init__(self, image_path, mask_path, image_shape,
+                 traverse_subdirs=False, chip_subset=[], batch_size=32,
+                 crop=False, output_x=256, output_y=256, shuffle=True,
+                 flip_x=False, flip_y=False, zoom_range=None,
                  rotate=False, rescale_brightness=None, output_dir=''):
         self.image_path = image_path
-        raw_image_list = [f for f in os.listdir(image_path)
-                          if f.endswith('.tif')]
+        self.traverse_subdirs = traverse_subdirs
         self.mask_path = mask_path
         raw_mask_list = [f for f in os.listdir(mask_path)
                          if f.endswith('.tif')]
+        raw_image_list = self._get_files_recursively()
         if chip_subset:
             # subset the raw mask and image lists based on a list of chips
             # provided as chip_subset
             self.image_list = [f for f in raw_image_list if any(
                 chip in f for chip in chip_subset
                 )]
-            self.mask_list = [f for f in raw_mask_list if any(
-                chip in f for chip in chip_subset
-                )]
+            self.mask_list = [os.path.join(self.mask_path, f)
+                              for f in raw_mask_list if any(
+                                  chip in f for chip in chip_subset
+                                  )]
         else:
             self.image_list = raw_image_list
             self.mask_list = raw_mask_list
@@ -392,6 +394,22 @@ class FileDataGenerator(keras.utils.Sequence):
         self.output_ctr = 0
         self.rescale_brightness = rescale_brightness
         self.on_epoch_end()
+
+    def _get_files_recursively(self):
+        """Get files from subdirs of `path`, joining them to the dir."""
+        if self.traverse_subdirs:
+            walker = os.walk(self.image_path)
+            im_path_list = []
+            for step in walker:
+                if not step[2]:  # if there are no files in the current dir
+                    continue
+                im_path_list += [os.path.join(step[0], step[1], fname)
+                                 for fname in step[2] if
+                                 fname.endswith('.tif')]
+            return im_path_list
+        else:
+            return [f for f in os.listdir(self.image_path)
+                    if f.endswith('.tif')]
 
     def on_epoch_end(self):
         'Update indices, rotations, etc. after each epoch'
@@ -447,14 +465,12 @@ class FileDataGenerator(keras.utils.Sequence):
         # TODO: IMPLEMENT MULTI-CHANNEL MASK FUNCTIONALITY
         y = np.empty((self.batch_size, self.output_y, self.output_x, 1))
         for i in range(self.batch_size):
-            im_fname = self.image_list[image_idxs[i]]
-            chip_id = '_'.join(im_fname.rstrip('.tif').split('_')[-2:])
-            mask_fname = [f for f in self.mask_list if chip_id in f][0]
-            im_arr = cv2.imread(os.path.join(self.image_path, im_fname),
-                                cv2.IMREAD_COLOR)
-            mask_arr = cv2.imread(os.path.join(self.mask_path, mask_fname),
-                                  cv2.IMREAD_GRAYSCALE)[:, :, np.newaxis]
-            mask_arr = mask_arr > 0
+            im_path = self.image_list[image_idxs[i]]
+            chip_id = '_'.join(im_path.rstrip('.tif').split('_')[-2:])
+            mask_path = [f for f in self.mask_list if chip_id in f][0]
+            im_arr = cv2.imread(im_path, cv2.IMREAD_COLOR)
+            mask_arr = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+            mask_arr = mask_arr[:, :, np.newaxis] > 0
             if self.zoom_range is not None:
                 im_arr = cv2.resize(
                     im_arr,
