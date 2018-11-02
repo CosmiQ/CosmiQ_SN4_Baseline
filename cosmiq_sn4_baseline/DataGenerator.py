@@ -524,24 +524,24 @@ class FileDataGenerator(keras.utils.Sequence):
         X = X/255.
         return X, y
 
-        def __len__(self):
-            'Denotes the number of batches per epoch'
-            return self.n_batches
+    def __len__(self):
+        'Denotes the number of batches per epoch'
+        return self.n_batches
 
-        def __getitem__(self, index):
-            'Generate one batch of data'
-            # Generate indexes of the batch
-            im_inds = self.image_indexes[index*self.batch_size:
-                                         (index+1)*self.batch_size]
+    def __getitem__(self, index):
+        'Generate one batch of data'
+        # Generate indexes of the batch
+        im_inds = self.image_indexes[index*self.batch_size:
+                                     (index+1)*self.batch_size]
 
-            # Generate data
-            X, y = self._data_generation(image_idxs=im_inds)
-            if self.output_dir:
-                np.save(os.path.join(
-                    self.output_dir, 'images_{}.npy'.format(self.output_ctr)),
-                        X)
-                np.save(os.path.join(
-                    self.output_dir, 'masks_{}.npy'.format(self.output_ctr)),
-                        y)
-                self.output_ctr += 1
-            return X, y
+        # Generate data
+        X, y = self._data_generation(image_idxs=im_inds)
+        if self.output_dir:
+            np.save(os.path.join(
+                self.output_dir, 'images_{}.npy'.format(self.output_ctr)),
+                    X)
+            np.save(os.path.join(
+                self.output_dir, 'masks_{}.npy'.format(self.output_ctr)),
+                    y)
+            self.output_ctr += 1
+        return X, y
