@@ -354,30 +354,30 @@ class FlatDataGenerator(keras.utils.Sequence):
 
 
 class FileDataGenerator(keras.utils.Sequence):
-    def __init__(self, image_path, mask_path, image_shape, chip_subset=[],
-                 batch_size=32, crop=False, output_x=256, output_y=256,
-                 shuffle=True, flip_x=False, flip_y=False, zoom_range=None,
+    def __init__(self, image_paths, mask_path, image_shape,
+                 traverse_subdirs=False, chip_subset=[], batch_size=32,
+                 crop=False, output_x=256, output_y=256, shuffle=True,
+                 flip_x=False, flip_y=False, zoom_range=None,
                  rotate=False, rescale_brightness=None, output_dir=''):
-        self.image_path = image_path
-        raw_image_list = [f for f in os.listdir(image_path)
-                          if f.endswith('.tif')]
+        self.traverse_subdirs = traverse_subdirs
         self.mask_path = mask_path
-        raw_mask_list = [f for f in os.listdir(mask_path)
-                         if f.endswith('.tif')]
+        self.mask_list = [f for f in os.listdir(mask_path)
+                          if f.endswith('.tif')]
+        self.image_list = image_paths
         if chip_subset:
             # subset the raw mask and image lists based on a list of chips
             # provided as chip_subset
-            self.image_list = [f for f in raw_image_list if any(
+            self.image_list = [f for f in self.image_list if any(
                 chip in f for chip in chip_subset
                 )]
-            self.mask_list = [f for f in raw_mask_list if any(
-                chip in f for chip in chip_subset
-                )]
-        else:
-            self.image_list = raw_image_list
-            self.mask_list = raw_mask_list
+            self.mask_list = [os.path.join(self.mask_path, f)
+                              for f in self.mask_list if any(
+                                  chip in f for chip in chip_subset
+                                  )]
         self.image_shape = image_shape
         self.batch_size = batch_size
+        self.n_batches = int(np.floor(len(self.image_list) /
+                                      self.batch_size))
         self.output_x = output_x
         self.output_y = output_y
         self.crop = crop
@@ -399,10 +399,10 @@ class FileDataGenerator(keras.utils.Sequence):
             np.random.shuffle(self.image_indexes)
         if self.crop:
             self.x_mins = np.random.randint(
-                0, self.images.shape[2]-self.output_x, size=self.batch_size
+                0, self.image_shape[1]-self.output_x, size=self.batch_size
             )
             self.y_mins = np.random.randint(
-                0, self.images.shape[1] - self.output_y, size=self.batch_size
+                0, self.image_shape[0] - self.output_y, size=self.batch_size
             )
         if self.flip_x:
             self.x_flips = np.random.choice(
@@ -423,10 +423,10 @@ class FileDataGenerator(keras.utils.Sequence):
                 size=self.batch_size
             )
         if self.zoom_range is not None:
-            if (1-self.zoom_range)*self.images.shape[1] < self.output_y:
-                self.zoom_range = self.output_y/self.images.shape[1]
-            if (1-self.zoom_range)*self.images.shape[2] < self.output_x:
-                self.zoom_range = self.output_x/self.images.shape[2]
+            if (1-self.zoom_range)*self.image_shape[0] < self.output_y:
+                self.zoom_range = self.output_y/self.image_shape[0]
+            if (1-self.zoom_range)*self.image_shape[1] < self.output_x:
+                self.zoom_range = self.output_x/self.image_shape[1]
             self.zoom_amt_y = np.random.uniform(
                 low=1-self.zoom_range,
                 high=1+self.zoom_range,
@@ -445,13 +445,14 @@ class FileDataGenerator(keras.utils.Sequence):
         # TODO: IMPLEMENT MULTI-CHANNEL MASK FUNCTIONALITY
         y = np.empty((self.batch_size, self.output_y, self.output_x, 1))
         for i in range(self.batch_size):
-            im_fname = self.image_list[image_idxs[i]]
-            chip_id = '_'.join(im_fname.rstrip('.tif').split('_')[-2:])
-            mask_fname = [f for f in self.mask_list if chip_id in f]
-            im_arr = cv2.imread(os.path.join(self.image_path, im_fname),
-                                cv2.IMREAD_COLOR)
-            mask_arr = cv2.imread(os.path.join(self.mask_path, mask_fname),
-                                  cv2.IMREAD_GRAYSCALE)[:, :, np.newaxis]
+            im_path = self.image_list[image_idxs[i]]
+            chip_id = '_'.join(im_path.rstrip('.tif').split('_')[-2:])
+            if chip_id.endswith('_image'):
+                chip_id = chip_id.rstrip('_image')
+            mask_path = [f for f in self.mask_list if chip_id in f][0]
+            im_arr = cv2.imread(im_path, cv2.IMREAD_COLOR)
+            mask_arr = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+            mask_arr = mask_arr[:, :, np.newaxis] > 0
             if self.zoom_range is not None:
                 im_arr = cv2.resize(
                     im_arr,
@@ -466,10 +467,10 @@ class FileDataGenerator(keras.utils.Sequence):
                 mask_arr = mask_arr > 0
                 pad_amt = [0, 0]
                 if self.zoom_amt_y[i] < 1:
-                    pad_amt[0] = int(self.images.shape[1] *
+                    pad_amt[0] = int(self.image_shape[0] *
                                      self.zoom_amt_y[i]*0.5)
                 if self.zoom_amt_x[i] < 1:
-                    pad_amt[1] = int(self.images.shape[2] *
+                    pad_amt[1] = int(self.image_shape[1] *
                                      self.zoom_amt_x[i]*0.5)
                 if pad_amt != [0, 0]:
                     mask_arr = np.pad(
@@ -494,9 +495,9 @@ class FileDataGenerator(keras.utils.Sequence):
                     :]
             else:
                 im_arr = cv2.resize(im_arr, (self.output_y, self.output_x,
-                                             self.images.shape[2]))
+                                             self.image_shape[2]))
                 mask_arr = cv2.resize(im_arr, (self.output_y, self.output_x,
-                                               self.masks.shape[2]))
+                                               1))
             if self.flip_x:
                 if self.x_flips[i]:
                     im_arr = np.flip(im_arr, axis=0)
@@ -522,24 +523,41 @@ class FileDataGenerator(keras.utils.Sequence):
         X = X/255.
         return X, y
 
-        def __len__(self):
-            'Denotes the number of batches per epoch'
-            return int(np.floor(self.images.shape[1]/self.batch_size))
+    def __len__(self):
+        'Denotes the number of batches per epoch'
+        return self.n_batches
 
-        def __getitem__(self, index):
-            'Generate one batch of data'
-            # Generate indexes of the batch
-            im_inds = self.image_indexes[index*self.batch_size:
-                                         (index+1)*self.batch_size]
+    def __getitem__(self, index):
+        'Generate one batch of data'
+        # Generate indexes of the batch
+        im_inds = self.image_indexes[index*self.batch_size:
+                                     (index+1)*self.batch_size]
 
-            # Generate data
-            X, y = self._data_generation(image_idxs=im_inds)
-            if self.output_dir:
-                np.save(os.path.join(
-                    self.output_dir, 'images_{}.npy'.format(self.output_ctr)),
-                        X)
-                np.save(os.path.join(
-                    self.output_dir, 'masks_{}.npy'.format(self.output_ctr)),
-                        y)
-                self.output_ctr += 1
-            return X, y
+        # Generate data
+        X, y = self._data_generation(image_idxs=im_inds)
+        if self.output_dir:
+            np.save(os.path.join(
+                self.output_dir, 'images_{}.npy'.format(self.output_ctr)),
+                    X)
+            np.save(os.path.join(
+                self.output_dir, 'masks_{}.npy'.format(self.output_ctr)),
+                    y)
+            self.output_ctr += 1
+        return X, y
+
+
+def get_files_recursively(image_path, traverse_subdirs=False):
+    """Get files from subdirs of `path`, joining them to the dir."""
+    if traverse_subdirs:
+        walker = os.walk(image_path)
+        im_path_list = []
+        for step in walker:
+            if not step[2]:  # if there are no files in the current dir
+                continue
+            im_path_list += [os.path.join(step[0], fname)
+                             for fname in step[2] if
+                             fname.endswith('.tif')]
+        return im_path_list
+    else:
+        return [f for f in os.listdir(image_path)
+                if f.endswith('.tif')]
