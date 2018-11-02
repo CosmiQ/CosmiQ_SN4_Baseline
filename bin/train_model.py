@@ -8,6 +8,12 @@ parser.add_argument('--data_path', '-d', type=str, default='',
                     help='Path to the directory containing the `train` and ' +
                     '`val` data folders. Defaults to the current working ' +
                     'directory.')
+parser.add_argument('--data_format', '-f', type=str, default='array',
+                    help='Is data stored in a NumPy array (default) or as ' +
+                    'image files? To use image files, pass `files` here. ' +
+                    'Currently only supports 8-bit RGB TIFFs as image files.' +
+                    'If passing files, --data_path must point to the folder ' +
+                    'containing the ')
 parser.add_argument('--output_path', '-o', type=str, default='model.hdf5',
                     help='Path for saving trained model. ' +
                     'Defaults to model.hdf5 in the working directory.')
@@ -22,12 +28,6 @@ parser.add_argument('--model', '-m', type=str, default='ternausnetv1',
 parser.add_argument('--tensorboard_dir', '-t', type=str, default='',
                     help='Path to save logs for TensorBoard. ' +
                     'If not provided, no TensorBoard logs are saved.')
-parser.add_argument('--data_format', '-f', type=str, default='array',
-                    help='Is data stored in a NumPy array (default) or as ' +
-                    'image files? To use image files, pass `files` here. ' +
-                    'Currently only supports 8-bit RGB TIFFs as image files.' +
-                    'If passing files, --data_path must point to the folder ' +
-                    'containing the ')
 
 args = parser.parse_args()
 
@@ -37,14 +37,14 @@ import tensorflow as tf
 tf.set_random_seed(args.seed)
 from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from keras.callbacks import ReduceLROnPlateau
-from cosmiq_sn4_baseline.DataGenerator import FlatDataGenerator
+from cosmiq_sn4_baseline.DataGenerator import FlatDataGenerator, FileDataGenerator
 from cosmiq_sn4_baseline.callbacks import TerminateOnMetricNaN
 from cosmiq_sn4_baseline.losses import hybrid_bce_jaccard
 from cosmiq_sn4_baseline.metrics import precision, recall
 from cosmiq_sn4_baseline.models import compile_model
 
 def main(dataset, model='ternausnetv1', data_path='',
-         output_path='model.hdf5', tb_dir=''):
+         output_path='model.hdf5', tb_dir='', data_format='array'):
 
     # create a few variables needed later.
     output_dir, model_name = os.path.split(output_path)
@@ -72,7 +72,7 @@ def main(dataset, model='ternausnetv1', data_path='',
                                  dataset + '_val_masks.npy')
 
     batch_size = 8
-    early_stopping_patience = 50
+    early_stopping_patience = 15
     model_args = {
         'optimizer': 'Nadam',
         'input_size': (512, 512, 3),
@@ -83,24 +83,49 @@ def main(dataset, model='ternausnetv1', data_path='',
     if model == 'unet':
         model_args['base_depth'] = 32
 
-    # load in data. don't read entirely into memory - too big.
-    train_im_arr = np.load(train_im_path, mmap_mode='r')
-    val_im_arr = np.load(val_im_path, mmap_mode='r')
-    train_mask_arr = np.load(train_mask_path, mmap_mode='r')
-    val_mask_arr = np.load(val_mask_path, mmap_mode='r')
+    if data_format == 'array':
+        # load in data. don't read entirely into memory - too big.
+        train_im_arr = np.load(train_im_path, mmap_mode='r')
+        val_im_arr = np.load(val_im_path, mmap_mode='r')
+        train_mask_arr = np.load(train_mask_path, mmap_mode='r')
+        val_mask_arr = np.load(val_mask_path, mmap_mode='r')
 
-    # create generators for training and validation
-    training_gen = FlatDataGenerator(
-        train_im_arr, train_mask_arr, batch_size=batch_size, crop=True,
-        output_x=model_args['input_size'][1],
-        output_y=model_args['input_size'][0],
-        flip_x=True, flip_y=True, rotate=True
-        )
-    validation_gen = FlatDataGenerator(
-        val_im_arr, val_mask_arr, batch_size=batch_size, crop=True,
-        output_x=model_args['input_size'][1],
-        output_y=model_args['input_size'][0]
-        )
+        # create generators for training and validation
+        training_gen = FlatDataGenerator(
+            train_im_arr, train_mask_arr, batch_size=batch_size, crop=True,
+            output_x=model_args['input_size'][1],
+            output_y=model_args['input_size'][0],
+            flip_x=True, flip_y=True, rotate=True
+            )
+        validation_gen = FlatDataGenerator(
+            val_im_arr, val_mask_arr, batch_size=batch_size, crop=True,
+            output_x=model_args['input_size'][1],
+            output_y=model_args['input_size'][0]
+            )
+        n_train_ims = train_im_arr.shape[0]
+        n_val_ims = val_im_arr.shape[0]
+    elif data_format == 'files':
+        im_path = os.path.join(data_path, 'train_rgb')
+        mask_path = os.path.join(data_path, 'masks')
+        unique_chips = [f.lstrip('mask_').rstrip('.tif')
+                        for f in os.listdir(mask_path)]
+        np.random.shuffle(unique_chips)
+        number_train_chips = int(len(unique_chips))*0.8
+        train_chips = unique_chips[:number_train_chips]
+        val_chips = unique_chips[number_train_chips:]
+        n_ims = len([f for f in os.listdir(im_path) if f.endswith('.tif')])
+        n_train_ims = np.floor(n_ims*0.8)
+        n_val_ims = np.floor(n_ims*0.2)
+
+        training_gen = FileDataGenerator(
+            im_path, mask_path, (900, 900, 3), chip_subset=train_chips,
+            crop=True, output_x=model_args['input_size'][1],
+            output_y=model_args['input_size'][0],
+            flip_x=True, flip_y=True, rotate=True)
+        validation_gen = FileDataGenerator(
+            im_path, mask_path, (900, 900, 3), chip_subset=val_chips,
+            crop=True, output_x=model_args['input_size'][1],
+            output_y=model_args['input_size'][0])
     monitor = 'val_loss'
     print()
     print("<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>")
@@ -122,7 +147,7 @@ def main(dataset, model='ternausnetv1', data_path='',
     callbax.append(TerminateOnMetricNaN('precision'))
     callbax.append(EarlyStopping(monitor=monitor,
                                  patience=early_stopping_patience,
-                                 mode='max'))
+                                 mode='auto'))
     if tb_dir:  # if saving tensorboard logs
         callbax.append(TensorBoard(
             log_dir=os.path.join(tb_dir, model_name)))
@@ -134,8 +159,8 @@ def main(dataset, model='ternausnetv1', data_path='',
                           verbose=True, **model_args)
     model.fit_generator(
         training_gen, validation_data=validation_gen,
-        validation_steps=np.floor(val_im_arr.shape[0]/batch_size),
-        steps_per_epoch=np.floor(train_im_arr.shape[0]/batch_size),
+        validation_steps=np.floor(n_val_ims/batch_size),
+        steps_per_epoch=np.floor(n_train_ims/batch_size),
         epochs=1000, callbacks=callbax
         )
     model.save(output_path)
@@ -147,4 +172,5 @@ def main(dataset, model='ternausnetv1', data_path='',
 
 if __name__ == '__main__':
     main(args.subset, model=args.model, data_path=args.data_path,
-         output_path=args.output_path, tb_dir=args.tensorboard_dir)
+         output_path=args.output_path, tb_dir=args.tensorboard_dir,
+         data_format=args.data_format)
