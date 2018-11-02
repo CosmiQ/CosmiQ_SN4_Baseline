@@ -354,32 +354,26 @@ class FlatDataGenerator(keras.utils.Sequence):
 
 
 class FileDataGenerator(keras.utils.Sequence):
-    def __init__(self, image_path, mask_path, image_shape,
+    def __init__(self, image_paths, mask_path, image_shape,
                  traverse_subdirs=False, chip_subset=[], batch_size=32,
                  crop=False, output_x=256, output_y=256, shuffle=True,
                  flip_x=False, flip_y=False, zoom_range=None,
                  rotate=False, rescale_brightness=None, output_dir=''):
-        self.image_path = image_path
         self.traverse_subdirs = traverse_subdirs
         self.mask_path = mask_path
-        raw_mask_list = [f for f in os.listdir(mask_path)
-                         if f.endswith('.tif')]
-        raw_image_list = get_files_recursively(self.image_path,
-                                               self.traverse_subdirs)
-        print('raw image list: {}'.format(raw_image_list))
+        self.mask_list = [f for f in os.listdir(mask_path)
+                          if f.endswith('.tif')]
+        self.image_list = image_paths
         if chip_subset:
             # subset the raw mask and image lists based on a list of chips
             # provided as chip_subset
-            self.image_list = [f for f in raw_image_list if any(
+            self.image_list = [f for f in self.image_list if any(
                 chip in f for chip in chip_subset
                 )]
             self.mask_list = [os.path.join(self.mask_path, f)
-                              for f in raw_mask_list if any(
+                              for f in self.mask_list if any(
                                   chip in f for chip in chip_subset
                                   )]
-        else:
-            self.image_list = raw_image_list
-            self.mask_list = raw_mask_list
         self.image_shape = image_shape
         self.batch_size = batch_size
         self.n_batches = int(np.floor(len(self.image_list) /

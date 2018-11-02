@@ -54,6 +54,7 @@ from cosmiq_sn4_baseline.callbacks import TerminateOnMetricNaN
 from cosmiq_sn4_baseline.losses import hybrid_bce_jaccard
 from cosmiq_sn4_baseline.metrics import precision, recall
 from cosmiq_sn4_baseline.models import compile_model
+import cosmiq_sn4_baseline as space_base
 
 
 def main(dataset, model='ternausnetv1', data_path='', mask_path='',
@@ -131,19 +132,28 @@ def main(dataset, model='ternausnetv1', data_path='', mask_path='',
         print(val_chips)
         im_fnames = get_files_recursively(data_path,
                                           traverse_subdirs=recursive)
+        if dataset != 'all':
+            if dataset == 'nadir':
+                collect_subset = space_base.COLLECTS[0:11]
+            elif dataset == 'offnadir':
+                collect_subset = space_base.COLLECTS[11:18]
+            elif dataset == 'faroffnadir':
+                collect_subset = space_base.COLLECTS[18:]
+            im_fnames = [f for f in im_fnames if
+                         any(c for c in collect_subset in f)]
         n_ims = len(im_fnames)
         print('n_ims: {}'.format(n_ims))
         n_train_ims = np.floor(n_ims*0.8)
         n_val_ims = np.floor(n_ims*0.2)
 
         training_gen = FileDataGenerator(
-            data_path, mask_path, (900, 900, 3), chip_subset=train_chips,
+            im_fnames, mask_path, (900, 900, 3), chip_subset=train_chips,
             batch_size=batch_size, crop=True, traverse_subdirs=recursive,
             output_x=model_args['input_size'][1],
             output_y=model_args['input_size'][0],
             flip_x=True, flip_y=True, rotate=True)
         validation_gen = FileDataGenerator(
-            data_path, mask_path, (900, 900, 3), chip_subset=val_chips,
+            im_fnames, mask_path, (900, 900, 3), chip_subset=val_chips,
             batch_size=batch_size, crop=True, traverse_subdirs=recursive,
             output_x=model_args['input_size'][1],
             output_y=model_args['input_size'][0])
