@@ -62,7 +62,7 @@ def main(dataset, model='ternausnetv1', data_path='', mask_path='',
 
     # create a few variables needed later.
     output_dir, model_name = os.path.split(output_path)
-    tmp_model_path = os.path.join(output_dir, 'tmp_model.h5')
+    tmp_model_path = output_path.rstrip('.hdf5') + '_ckpt_best.hdf5'
     tmp_weights_path = os.path.join(output_dir, 'tmp_weights.h5')
     if not mask_path:
         mask_path = data_path
@@ -138,13 +138,13 @@ def main(dataset, model='ternausnetv1', data_path='', mask_path='',
 
         training_gen = FileDataGenerator(
             data_path, mask_path, (900, 900, 3), chip_subset=train_chips,
-            batch_size=batch_size, crop=True,
+            batch_size=batch_size, crop=True, traverse_subdirs=recursive,
             output_x=model_args['input_size'][1],
             output_y=model_args['input_size'][0],
             flip_x=True, flip_y=True, rotate=True)
         validation_gen = FileDataGenerator(
             data_path, mask_path, (900, 900, 3), chip_subset=val_chips,
-            batch_size=batch_size, crop=True,
+            batch_size=batch_size, crop=True, traverse_subdirs=recursive,
             output_x=model_args['input_size'][1],
             output_y=model_args['input_size'][0])
     monitor = 'val_loss'
