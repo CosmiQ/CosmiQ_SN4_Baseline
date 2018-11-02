@@ -91,7 +91,7 @@ if __name__ == '__main__':
     test_fnames_path = os.path.join(args.test_data_path, 'test',
                                     'test_im_fnames.npy')
     geotiff_path = os.path.join(args.test_data_path, 'geotiffs')
-    test_dataset = np.load(test_dataset_path, mmap_mode='r')
+    test_dataset = np.load(test_dataset_path, mmap_mode='r')/255.
     test_fnames = np.load(test_fnames_path)
 
     # subset test angles

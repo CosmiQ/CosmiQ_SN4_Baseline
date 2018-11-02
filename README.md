@@ -120,7 +120,7 @@ _Arguments:_
 - `--data_path`, `-d`: Path to the source dataset files. This corresponds to `--output_dir` from make_np_arrays.py.
 - `--output_path`, `-o`: Path to save the trained model to. Should end in '.h5' or '.hdf5'.
 - `--subset`, `-s`: Train on all of the data, or just a subset? Defaults to 'all'. Other options are 'nadir', 'offnadir', or 'faroffnadir'. To use the subset options, the imagery subsets must have been produced using the `--create_splits` flag in make_np_arrays.py.
-- `--seed`, `-e`: Seed for random number generation in NumPy and TensorFlow. Alters initialization parameters for each model layer. Defaults to 1337.
+- `--seed`, `-e`: Seed for random number generation in NumPy and TensorFlow. Alters initialization parameters for each model layer. Defaults to 42.
 - `--model`, `-m`: Options are 'ternausnetv1' (default) and 'unet'. See cosmiq_sn4_baseline.models for details on model architecture.
 - `--tensorboard_dir`, `-t`: Destination directory for tensorboard log writing. Optional, only required if you want to use tensorboard to visualize training.
 
