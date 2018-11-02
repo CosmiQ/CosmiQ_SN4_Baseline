@@ -399,10 +399,10 @@ class FileDataGenerator(keras.utils.Sequence):
             np.random.shuffle(self.image_indexes)
         if self.crop:
             self.x_mins = np.random.randint(
-                0, self.images.shape[2]-self.output_x, size=self.batch_size
+                0, self.image_shape[1]-self.output_x, size=self.batch_size
             )
             self.y_mins = np.random.randint(
-                0, self.images.shape[1] - self.output_y, size=self.batch_size
+                0, self.image_shape[0] - self.output_y, size=self.batch_size
             )
         if self.flip_x:
             self.x_flips = np.random.choice(
@@ -423,10 +423,10 @@ class FileDataGenerator(keras.utils.Sequence):
                 size=self.batch_size
             )
         if self.zoom_range is not None:
-            if (1-self.zoom_range)*self.images.shape[1] < self.output_y:
-                self.zoom_range = self.output_y/self.images.shape[1]
-            if (1-self.zoom_range)*self.images.shape[2] < self.output_x:
-                self.zoom_range = self.output_x/self.images.shape[2]
+            if (1-self.zoom_range)*self.image_shape[0] < self.output_y:
+                self.zoom_range = self.output_y/self.image_shape[0]
+            if (1-self.zoom_range)*self.image_shape[1] < self.output_x:
+                self.zoom_range = self.output_x/self.image_shape[1]
             self.zoom_amt_y = np.random.uniform(
                 low=1-self.zoom_range,
                 high=1+self.zoom_range,
@@ -466,10 +466,10 @@ class FileDataGenerator(keras.utils.Sequence):
                 mask_arr = mask_arr > 0
                 pad_amt = [0, 0]
                 if self.zoom_amt_y[i] < 1:
-                    pad_amt[0] = int(self.images.shape[1] *
+                    pad_amt[0] = int(self.image_shape[0] *
                                      self.zoom_amt_y[i]*0.5)
                 if self.zoom_amt_x[i] < 1:
-                    pad_amt[1] = int(self.images.shape[2] *
+                    pad_amt[1] = int(self.image_shape[1] *
                                      self.zoom_amt_x[i]*0.5)
                 if pad_amt != [0, 0]:
                     mask_arr = np.pad(
@@ -494,9 +494,9 @@ class FileDataGenerator(keras.utils.Sequence):
                     :]
             else:
                 im_arr = cv2.resize(im_arr, (self.output_y, self.output_x,
-                                             self.images.shape[2]))
+                                             self.image_shape[2]))
                 mask_arr = cv2.resize(im_arr, (self.output_y, self.output_x,
-                                               self.masks.shape[2]))
+                                               1))
             if self.flip_x:
                 if self.x_flips[i]:
                     im_arr = np.flip(im_arr, axis=0)
@@ -524,7 +524,7 @@ class FileDataGenerator(keras.utils.Sequence):
 
         def __len__(self):
             'Denotes the number of batches per epoch'
-            return int(np.floor(self.images.shape[1]/self.batch_size))
+            return int(np.floor(self.image_list/self.batch_size))
 
         def __getitem__(self, index):
             'Generate one batch of data'
