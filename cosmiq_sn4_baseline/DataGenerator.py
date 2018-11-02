@@ -376,6 +376,11 @@ class FileDataGenerator(keras.utils.Sequence):
         else:
             self.image_list = raw_image_list
             self.mask_list = raw_mask_list
+        print('image list:')
+        print(self.image_list)
+        print()
+        print('mask list:')
+        print(self.mask_list)
         self.image_shape = image_shape
         self.batch_size = batch_size
         self.n_batches = int(np.floor(len(self.image_list) /
