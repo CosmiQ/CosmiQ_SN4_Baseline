@@ -557,7 +557,7 @@ def get_files_recursively(image_path, traverse_subdirs=False):
         for step in walker:
             if not step[2]:  # if there are no files in the current dir
                 continue
-            im_path_list += [os.path.join(step[0], step[1], fname)
+            im_path_list += [os.path.join(step[0], fname)
                              for fname in step[2] if
                              fname.endswith('.tif')]
         return im_path_list
