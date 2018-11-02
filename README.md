@@ -74,8 +74,38 @@ The arguments are documented within the codebase. You can also receive a descrip
 from the command line. Their usage is also detailed below.
 
 #### Command line functions
-__make_np_arrays.py__ --dataset_dir (source_directory) --output_dir (destination_directory) [--verbose --create_splits]  
 
+__make_rgbs.py__ --dataset_dir (source_directory) --output_dir (destination_directory) [--verbose --overwrite]  
+___added in 1.1.0___
+Convert Pan-sharpened 4-channel 16-bit images to RGB 8-bits (BGR channel order).
+
+__NOTE__: IMAGERY TARBALLS MUST BE EXPANDED BEFORE CALLING THIS SCRIPT!  
+_Arguments:_
+- `--dataset_dir`, `-d`: Path to the directory containing both the training and test datasets. The structure should be thus:  
+```
+dataset_dir
+|
++-- SpaceNet-Off-Nadir_Train
+|   +-- Unzipped imagery directories from tarballs (e.g. Atlanta_nadir29_catid_1030010003315300/)
+|   +-- geojson/  # directory containing building labels
+|
++-- SpaceNet-Off-Nadir_Test
+    +-- Unzipped imagery directories from tarballs
+```
+- `--output_dir`, `-o`: Path to the desired directory to save output data to. Outputs will be comprised of 8-bit BGR .tifs and binary mask .tifs for each location chip. The output structure will be thus when completed:
+```
+output_dir
+|
++-- train_rgb: directory containing 8-bit BGR tiffs for each collect/chip pair from SpaceNet-Off-Nadir_Train subdirs
++-- masks: directory containing tiff binary masks for each chip from SpaceNet-Off-Nadir_Train/geojson
++-- test_rgb: directory containing 8-bit BGR tiffs for each collect/chip pair from SpaceNet-Off-Nadir_Test subdirs
+```
+- `--verbose`, `-v`: Verbose text output while running? Defaults to `False`.
+- `--overwrite`, `-w`: Overwrite pre-existing images? Defaults to `False`, in which case it skips over any images that are already present.
+
+
+
+__make_np_arrays.py__ --dataset_dir (source_directory) --output_dir (destination_directory) [--verbose --create_splits --overwrite]  
 Convert imagery to a Keras model-usable format.
 __NOTE__: IMAGERY TARBALLS MUST BE EXPANDED BEFORE THIS SCRIPT IS CALLED!  
 _Arguments:_  
@@ -112,12 +142,16 @@ output_dir
 ```
 - `--verbose`, `-v`: Verbose text output while running? Defaults to `False`.
 - `--create_splits`, `-s`: Make nadir, offnadir, and far-offnadir training subarrays? Defaults to `False`. Note that using this flag roughly doubles the disk space required for imagery numpy array storage.  
+- `--overwrite`, `-ow`: Overwrite existing images? Defaults to `False`, in which case it will skip any image files or arrays that are already present. _Note_: there is a known issue with not using the `-ow` flag, and it must currently be used when running this script.
 
 __train_model.py__ --data_path (source_directory) --output_path (path to model output) [--subset ['all', 'nadir', 'offnadir', or 'faroffnadir'] --seed (integer) --model ['ternausnetv1' or 'unet', see docstring] --tensorboard_dir (path to desired tensorboard log output dir)]
 
 Train a model on the data. __Note__: Source imagery must be generated using make_np_arrays.py prior to use.  
 _Arguments:_
-- `--data_path`, `-d`: Path to the source dataset files. This corresponds to `--output_dir` from make_np_arrays.py.
+- `--data_path`, `-d`: Path to the source dataset files. This corresponds to `--output_dir` from make_np_arrays.py if using `--data_format array` (the default), or make_rgbs output/train_rgb if using `--data_format files`. See the docstring for more detauls.
+- __New__ `--mask_path`, `-m`: Path to the directory containing masks. If not passed, it's assumed that you're using arrays from make_np_arrays.py, in which case the script will use `--data_path` here as well. This must be pointed to make_rgbs.py output_dir/masks if `--data_format` is `files`.
+- __New__ `--data_format`, `-f`: What type of data should be read into the model? Can be either `array` (the default) or `files`. If `array`, then make_np_arrays.py must have been run first to generate the array data. If `files`, either make_np_arrays.py or make_rgbs.py must have been run.
+- __New__ `--recursive`, `-r`: Should subdirectories of `--data_path` be recursively traversed to search for images? Defaults to `False`. If used, then all .tif files in any directory under `--data_path` must be an rgb .tif for use in training.
 - `--output_path`, `-o`: Path to save the trained model to. Should end in '.h5' or '.hdf5'.
 - `--subset`, `-s`: Train on all of the data, or just a subset? Defaults to 'all'. Other options are 'nadir', 'offnadir', or 'faroffnadir'. To use the subset options, the imagery subsets must have been produced using the `--create_splits` flag in make_np_arrays.py.
 - `--seed`, `-e`: Seed for random number generation in NumPy and TensorFlow. Alters initialization parameters for each model layer. Defaults to 42.

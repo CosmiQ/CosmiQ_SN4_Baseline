@@ -3,6 +3,7 @@ import rasterio
 import os
 import cosmiq_sn4_baseline as space_base
 import cv2
+import random
 
 
 def convert_to_8bit_bgr(four_channel_im, threshold):
@@ -51,7 +52,8 @@ def pan_to_bgr(src_path, dest_path):
     cv2.imwrite(dest_path, bgr_im)
 
 
-def make_rgbs(src_dir, dest_dir, verbose=False, skip_existing=True):
+def make_rgbs(src_dir, dest_dir, verbose=False, skip_existing=True,
+              val_split=0, val_dest_dir=''):
     """Create RGB images from Pan-Sharpened 16-bit source images.
 
     Arguments:
@@ -66,20 +68,43 @@ def make_rgbs(src_dir, dest_dir, verbose=False, skip_existing=True):
     skip_existing (bool): Should source images be skipped if the destination
         file already exists? Defaults to True. If set to False, will overwrite
         existing RGB images with the same filenames in the destination dir.
+    split (float): What fraction of chip locations should be split into
+        validation? Defaults to 0 (no splitting). If a non-zero value is passed
+        and `val_dest_dir` is not passed, 'val_' will be prepended onto
+        `src_dir` and validation images will be saved there.
+    val_dest_dir (str): Directory to save validation images to if using a
+        train/val split. Defaults to '' (see `split` for how this is handled
+        if split != 0 and no directory is passed here).
 
     """
     if not os.path.isdir(dest_dir):
-        os.mkdir(dest_dir)
+        os.makedirs(dest_dir)
+    if val_split != 0 and not val_dest_dir:
+        val_dest_dir = 'val_' + dest_dir
+    if val_dest_dir and not os.path.isdir(val_dest_dir):
+        os.makedirs(val_dest_dir)
+
+    # get the unique chip IDs from one of the subdirectories of src_dir
+    subdir = os.path.join(src_dir, space_base.COLLECTS[0], 'Pan-Sharpen')
+    chip_ids = [f for f in os.listdir(subdir) if f.endswith('.tif')]
+    chip_ids = ['_'.join(c.rstrip('.tif').split('_')[-2:])
+                for c in chip_ids]
+    chip_ids = random.shuffle(chip_ids)
+    if val_split:
+        val_chips = chip_ids[0:int(len(chip_ids)*val_split)]
+        train_chips = chip_ids[int(len(chip_ids)*val_split):]
+    else:
+        train_chips = chip_ids
     for collect in space_base.COLLECTS:
         if verbose:
             print('Converting collect {} to BGR 8-bit'.format(collect))
-        collect_path = os.path.join(src_dir, collect)
-        collect_pansharp_path = os.path.join(collect_path, 'Pan-Sharpen')
+        collect_pansharp_path = os.path.join(src_dir, collect, 'Pan-Sharpen')
         im_list = [f for f in os.listdir(collect_pansharp_path)
                    if f.endswith('.tif')]
         n_ims = len(im_list)
         for i in range(n_ims):
             im_fname = im_list[i]
+
             dest_path = os.path.join(dest_dir, im_fname)
             if os.path.exists(dest_path) and skip_existing:
                 if verbose:

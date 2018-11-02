@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
     name='CosmiQ_SN4_Baseline',
-    version='1.0.1',
+    version='1.1.0',
     description='SpaceNet 4 Baseline',
     author='Nick Weir',
     author_email='nweir@iqt.org',
