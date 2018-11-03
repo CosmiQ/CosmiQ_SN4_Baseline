@@ -447,7 +447,7 @@ class FileDataGenerator(keras.utils.Sequence):
         for i in range(self.batch_size):
             im_path = self.image_list[image_idxs[i]]
             # TODO: IMPLEMENT BETTER REGEX-BASED CHIP ID SEARCHING
-            if chip_id.endswith('_image.tif'):
+            if im_path.endswith('_image.tif'):
                 chip_id = '_'.join(im_path.rstrip('_image.tif').split('_')[-2:])
             else:
                 chip_id = '_'.join(im_path.rstrip('.tif').split('_')[-2:])
