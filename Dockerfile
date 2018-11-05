@@ -23,6 +23,7 @@ RUN apt-get update \
     libgdal-dev \
     libssl-dev \
     libffi-dev \
+		libncurses-dev \
     libgl1 \
     jq \
     nfs-common \
@@ -91,6 +92,7 @@ RUN conda install -n space_base \
               ipykernel \
               libgdal \
               matplotlib \
+							ncurses \
               numpy \
               opencv \
               pandas \
