@@ -56,16 +56,15 @@ from cosmiq_sn4_baseline.metrics import precision, recall
 from cosmiq_sn4_baseline.models import compile_model
 import cosmiq_sn4_baseline as space_base
 
-if args.verbose:
-    print('----Arguments----')
-    print('Data path: {}'.format(args.data_path))
-    print('Mask path: {}'.format(args.mask_path))
-    print('Output path: {}'.format(args.output_path))
-    print('Tensorboard log output path: {}'.format(args.tensorboard_dir))
-    print('Data format: {}'.format(args.data_format))
-    print('Subset: {}'.format(args.subset))
-    print('Seed: {}'.format(args.seed))
-    print('Recursive: {}'.format(args.recursive))
+print('----Arguments----')
+print('Data path: {}'.format(args.data_path))
+print('Mask path: {}'.format(args.mask_path))
+print('Output path: {}'.format(args.output_path))
+print('Tensorboard log output path: {}'.format(args.tensorboard_dir))
+print('Data format: {}'.format(args.data_format))
+print('Subset: {}'.format(args.subset))
+print('Seed: {}'.format(args.seed))
+print('Recursive: {}'.format(args.recursive))
 
 
 def main(dataset, model='ternausnetv1', data_path='', mask_path='',
