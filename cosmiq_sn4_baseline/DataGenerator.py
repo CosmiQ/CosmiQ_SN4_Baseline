@@ -548,7 +548,7 @@ class FileDataGenerator(keras.utils.Sequence):
         return X, y
 
 
-def get_files_recursively(image_path, traverse_subdirs=False):
+def get_files_recursively(image_path, traverse_subdirs=False, file_ext='.tif'):
     """Get files from subdirs of `path`, joining them to the dir."""
     if traverse_subdirs:
         walker = os.walk(image_path)
@@ -558,8 +558,8 @@ def get_files_recursively(image_path, traverse_subdirs=False):
                 continue
             im_path_list += [os.path.join(step[0], fname)
                              for fname in step[2] if
-                             fname.endswith('.tif')]
+                             fname.endswith(file_ext)]
         return im_path_list
     else:
         return [f for f in os.listdir(image_path)
-                if f.endswith('.tif')]
+                if f.endswith(file_ext)]
