@@ -47,6 +47,10 @@ Building the nvidia-docker image for this repository will install all of the pac
 4. `NV_GPU=[GPU_ID] nvidia-docker run -it --name space_base cosmiq_sn4_baseline`  
 Replace `[GPU_ID]` with the identifier for the GPU you plan to use.
 
+#### Docker container install troubleshooting
+_Updated 12.31.2018_
+We have observed problems with docker installation of this repo leading to GDAL linking errors with conda-forge Rasterio 1.0.13 and GDAL 2.3.2. If you encounter problems with `import rasterio` commands in the codebase, We recommend updating [The GDAL installation line in the Dockerfile](https://github.com/CosmiQ/CosmiQ_SN4_Baseline/blob/master/Dockerfile#L105) to specify `gdal==2.2.4`, which serves as a bugfix until the conda-forge feedstocks are fixed.
+
 
 If you do not have access to GPUs, you can still install the python codebase using `pip` and perform model training and inference; however, it will run much more slowly.
 #### pip installation of the codebase
