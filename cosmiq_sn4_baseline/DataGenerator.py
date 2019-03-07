@@ -561,5 +561,5 @@ def get_files_recursively(image_path, traverse_subdirs=False):
                              fname.endswith('.tif')]
         return im_path_list
     else:
-        return [f for f in os.listdir(image_path)
+        return [os.path.join(image_path, f) for f in os.listdir(image_path)
                 if f.endswith('.tif')]
