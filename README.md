@@ -61,7 +61,7 @@ If you do not have access to GPUs, or you only wish to install the python librar
   - `cd CosmiQ_SN4_Baseline`
   - `pip install -e .`
 2. Install directly from GitHub _(python module only)_
-  - Within a shell, run `pip install -e git+git://github.com/cosmiq_sn4_baseline`
+  - Within a shell, run `pip install -e git+git://github.com/cosmiq/cosmiq_sn4_baseline#egg=cosmiq_sn4_baseline`
 ---
 ## Usage
 The python library and scripts here can be used one of two ways:
